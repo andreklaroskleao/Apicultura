@@ -25,7 +25,8 @@ import {
     arrayUnion,
     arrayRemove,
     orderBy,
-    runTransaction
+    runTransaction,
+    enableIndexedDbPersistence // <-- ADICIONADO PARA OFFLINE
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 // Importações das funções de inicialização das outras abas
 import { initializeReportPage } from './relatorio.js';
@@ -47,6 +48,21 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+// --- HABILITAR PERSISTÊNCIA OFFLINE ---
+// Adicionado este bloco para ativar o cache de dados do Firestore
+try {
+    await enableIndexedDbPersistence(db);
+    console.log("Persistência offline do Firestore ativada!");
+} catch (err) {
+    if (err.code == 'failed-precondition') {
+        console.warn("Falha ao habilitar persistência. Múltiplas abas abertas podem causar este problema.");
+    } else if (err.code == 'unimplemented') {
+        console.error("Este navegador não suporta persistência offline.");
+    }
+}
+// ------------------------------------
+
 setLogLevel('debug');
 
 // --- REFERÊNCIAS AO DOM ---
@@ -1002,5 +1018,20 @@ async function handleAccessRequest(requestId, hiveId, requesterId, newStatus) {
 // --- INICIALIZAÇÃO ---
 (async () => {
     await fetchStates();
+    
+    // --- REGISTRO DO SERVICE WORKER ---
+    // Adicionado este bloco para registrar o service worker que torna o app offline
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then(registration => {
+            console.log('Service Worker registrado com sucesso:', registration.scope);
+          })
+          .catch(error => {
+            console.log('Falha no registro do Service Worker:', error);
+          });
+      });
+    }
+    // ------------------------------------
 
 })();
