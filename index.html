@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BeeControl - Controle de Abelhas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="main-container">
+
+        <div id="auth-container" class="auth-wrapper">
+            <div class="auth-container">
+                <div class="auth-card">
+                    <div class="auth-header">
+                        <div class="logo">
+                            <i class="fa-solid fa-shield-halved"></i>
+                            <h1>BeeControl</h1>
+                        </div>
+                        <p>Gestão Inteligente de Colmeias</p>
+                    </div>
+                    
+                    <div class="tabs">
+                        <button id="login-tab" class="tab-button active">Login</button>
+                        <button id="register-tab" class="tab-button">Registrar</button>
+                    </div>
+                    
+                    <form id="login-form" class="auth-form">
+                        <div class="input-group">
+                            <label for="login-email" class="form-label">Email</label>
+                            <input type="email" id="login-email" required class="form-input">
+                        </div>
+                        <div class="input-group">
+                            <label for="login-password" class="form-label">Senha</label>
+                            <input type="password" id="login-password" required class="form-input">
+                        </div>
+                        <button type="submit" class="button-primary w-full">Entrar</button>
+                    </form>
+                    
+                    <form id="register-form" class="auth-form hidden">
+                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="input-group md:col-span-2">
+                                <label for="register-name" class="form-label">Nome Completo</label>
+                                <input type="text" id="register-name" required class="form-input">
+                            </div>
+                             <div class="input-group md:col-span-2">
+                                <label for="register-apiary" class="form-label">Nome da Apicultura</label>
+                                <input type="text" id="register-apiary" required class="form-input" placeholder="Ex: Apiário do Sol">
+                            </div>
+                            <div class="input-group md:col-span-2">
+                                <label for="register-email" class="form-label">Email</label>
+                                <input type="email" id="register-email" required class="form-input">
+                            </div>
+                            <div class="input-group md:col-span-2">
+                                <label for="register-password" class="form-label">Senha (mínimo 6 caracteres)</label>
+                                <input type="password" id="register-password" required class="form-input">
+                            </div>
+                            <div class="input-group">
+                                <label for="register-state" class="form-label">Estado</label>
+                                <select id="register-state" required class="form-input"></select>
+                            </div>
+                            <div class="input-group">
+                                <label for="register-city" class="form-label">Cidade</label>
+                                <select id="register-city" required class="form-input"></select>
+                            </div>
+                        </div>
+                        <button type="submit" class="button-success w-full mt-4">Criar Conta</button>
+                    </form>
+                    <p id="auth-error" class="auth-error"></p>
+                </div>
+            </div>
+        </div>
+
+        <div id="app-container" class="hidden">
+            <header class="app-header">
+                <div class="logo">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <h1>BeeControl</h1>
+                </div>
+                <nav class="main-nav">
+                    <a href="#" id="dashboard-link" class="nav-link active">Painel</a>
+                    <a href="#" id="monitoring-link" class="nav-link">Monitoramento</a>
+                    <a href="#" id="management-link" class="nav-link">Gestão</a>
+                    <a href="#" id="reports-link" class="nav-link">Relatórios</a>
+                    <a href="#" id="admin-panel-link" class="nav-link hidden">Admin</a>
+                </nav>
+                <div class="header-actions">
+                    <button id="profile-button" class="icon-button" title="Meu Perfil">
+                        <i class="fa-solid fa-user"></i>
+                    </button>
+                    <div id="notification-bell" class="notification-bell">
+                        <i class="fa-solid fa-bell"></i>
+                        <span id="notification-count" class="notification-badge hidden"></span>
+                        <div id="notification-dropdown" class="notification-dropdown hidden"></div>
+                    </div>
+                    <div class="user-menu">
+                        <span id="user-info"></span>
+                        <button id="logout-button" class="logout-button" title="Sair">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <main id="dashboard-view" class="main-content">
+                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 space-y-6">
+                         <div class="card form-card">
+                            <h3 id="form-title" class="card-title">Adicionar Nova Coleta</h3>
+                            <form id="data-form" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4">
+                                <input type="hidden" id="collection-id">
+                                <div class="input-group">
+                                    <label for="hive-id-select" class="form-label">Colmeia</label>
+                                    <select id="hive-id-select" required class="form-input"></select>
+                                </div>
+                                <div class="input-group">
+                                    <label for="data" class="form-label">Data da Coleta</label>
+                                    <input type="date" id="data" required class="form-input">
+                                </div>
+                                <div class="input-group">
+                                    <label for="numeroColeta" class="form-label">Número da Coleta</label>
+                                    <input type="number" id="numeroColeta" required class="form-input" placeholder="Ex: 1">
+                                </div>
+                                <div class="input-group">
+                                    <label for="numeroMelgueiras" class="form-label">N° de Melgueiras</label>
+                                    <input type="number" id="numeroMelgueiras" required class="form-input" value="1">
+                                </div>
+                                <div class="input-group">
+                                    <label for="pesoNinhoVazio" class="form-label">Peso Ninho Vazio (kg)</label>
+                                    <input type="number" step="0.01" id="pesoNinhoVazio" required class="form-input">
+                                </div>
+                                <div class="input-group">
+                                    <label for="pesoQuadrosOperculos" class="form-label">Peso Quadros + Opérculos (kg)</label>
+                                    <input type="number" step="0.01" id="pesoQuadrosOperculos" required class="form-input">
+                                </div>
+                                <div class="input-group">
+                                    <label for="pesoMelgueiraVazia" class="form-label">Peso Melgueira Vazia (kg)</label>
+                                    <input type="number" step="0.01" id="pesoMelgueiraVazia" required class="form-input">
+                                </div>
+                                <div class="input-group">
+                                    <label for="pesoQuadrosMelgueira" class="form-label">Peso Quadros Melgueira (kg)</label>
+                                    <input type="number" step="0.01" id="pesoQuadrosMelgueira" required class="form-input">
+                                </div>
+                                <div class="input-group sm:col-span-2 lg:col-span-4">
+                                     <label for="observacoes" class="form-label">Observações</label>
+                                     <textarea id="observacoes" rows="2" class="form-input"></textarea>
+                                </div>
+                                <div class="sm:col-span-2 lg:col-span-4 flex items-center gap-4">
+                                    <button type="submit" class="button-primary"><i class="fa-solid fa-save mr-2"></i>Salvar Coleta</button>
+                                    <button type="button" id="cancel-edit-button" class="button-secondary hidden">Cancelar Edição</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="card table-card">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="card-title mb-0">Últimas Coletas Registradas</h3>
+                                <div class="w-1/3">
+                                    <label for="collection-filter-input" class="form-label">Filtrar por Colmeia</label>
+                                    <input type="text" id="collection-filter-input" class="form-input text-sm p-2" placeholder="Digite o N°...">
+                                </div>
+                            </div>
+                            <div class="table-container-scroll">
+                                <div class="table-wrapper">
+                                    <table class="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Colmeia</th>
+                                                <th>Data</th>
+                                                <th>Peso Colônia</th>
+                                                <th class="hidden md:table-cell">Observações</th>
+                                                <th>Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="data-table-body"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="space-y-6">
+                        <div class="card">
+                             <h3 class="card-title">Gestão de Colmeias</h3>
+                             <form id="hive-form" class="flex gap-4 mb-4">
+                                <input type="text" id="hive-id-input" required class="form-input" placeholder="N° da nova colmeia">
+                                <button type="submit" class="button-success whitespace-nowrap">Adicionar</button>
+                             </form>
+                             <div class="table-wrapper">
+                                 <table class="data-table">
+                                     <thead>
+                                         <tr>
+                                             <th>N°</th>
+                                             <th>Ações</th>
+                                         </tr>
+                                     </thead>
+                                     <tbody id="hives-table-body"></tbody>
+                                 </table>
+                             </div>
+                        </div>
+                         <div class="card">
+                            <h3 class="card-title">Ações Rápidas</h3>
+                             <button id="request-access-btn" class="button-primary w-full">
+                                <i class="fa-solid fa-share-nodes mr-2"></i>Solicitar Acesso a uma Colmeia
+                            </button>
+                        </div>
+                    </div>
+                 </div>
+            </main>
+
+            <section id="monitoring-view" class="main-content hidden">
+                <div class="content-header">
+                    <h2>Monitoramento de Colmeia</h2>
+                </div>
+                <div class="card">
+                    <div class="input-group">
+                        <label for="monitoring-hive-select" class="form-label">Selecione uma Colmeia para Monitorar</label>
+                        <div class="flex gap-4">
+                            <select id="monitoring-hive-select" class="form-input"></select>
+                            <button id="search-hive-btn" class="button-primary"><i class="fa-solid fa-search"></i></button>
+                        </div>
+                    </div>
+                </div>
+                <div id="panorama-container" class="hidden">
+                    <div class="content-header">
+                        <h3 id="panorama-title" class="text-xl font-bold"></h3>
+                        <button id="print-panorama-btn" class="button-secondary"><i class="fa-solid fa-print mr-2"></i>Imprimir Panorama</button>
+                    </div>
+                    <div id="printable-panorama">
+                        <div class="monitoring-grid">
+                            <div class="card summary-card" id="summary-total-collections"></div>
+                            <div class="card summary-card" id="summary-avg-weight"></div>
+                            <div class="card summary-card" id="summary-last-collection"></div>
+                            <div class="card chart-container">
+                                <canvas id="colony-weight-chart"></canvas>
+                            </div>
+                            <div class="card weather-card">
+                                <h3 class="card-title">Histórico Climático</h3>
+                                <div class="table-wrapper">
+                                    <table class="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Data</th>
+                                                <th><i class="fa-solid fa-temperature-half"></i> Temp.</th>
+                                                <th><i class="fa-solid fa-cloud-rain"></i> Chuva</th>
+                                                <th><i class="fa-solid fa-wind"></i> Vento</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="weather-table-body"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="card">
+                                <h3 class="card-title">Anotações Extras</h3>
+                                <form id="notes-form">
+                                    <textarea id="extra-notes" class="form-input" rows="4"></textarea>
+                                    <button type="submit" class="button-primary mt-2">Salvar Anotação</button>
+                                </form>
+                            </div>
+                            <div class="card">
+                                <h3 class="card-title">Saúde da Colmeia</h3>
+                                <form id="health-form" class="space-y-4">
+                                     <div class="input-group">
+                                        <label for="pest-presence" class="form-label">Presença de Praga (Ex: Varroa)</label>
+                                        <input type="text" id="pest-presence" class="form-input">
+                                    </div>
+                                    <div class="input-group">
+                                        <label for="queen-replacement" class="form-label">Substituição de Rainha (Data)</label>
+                                        <input type="date" id="queen-replacement" class="form-input">
+                                    </div>
+                                    <button type="submit" class="button-primary">Salvar Saúde</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="management-view" class="main-content hidden">
+                <div class="content-header">
+                    <h2>Gestão de Produção e Estoque</h2>
+                </div>
+                <div class="management-grid">
+                    <div class="card">
+                        <h3 class="card-title">Controle de Extração e Envase</h3>
+                        <form id="extraction-form" class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="input-group">
+                                    <label for="extraction-date" class="form-label">Data</label>
+                                    <input type="date" id="extraction-date" required class="form-input">
+                                </div>
+                                <div class="input-group">
+                                    <label for="extraction-volume" class="form-label">Volume (kg)</label>
+                                    <input type="number" step="0.1" id="extraction-volume" required class="form-input">
+                                </div>
+                                <div class="input-group">
+                                    <label for="extraction-destination" class="form-label">Destino</label>
+                                    <select id="extraction-destination" required class="form-input">
+                                        <option>Venda</option>
+                                        <option>Consumo Próprio</option>
+                                        <option>Doação</option>
+                                        <option>Outro</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label for="extraction-notes" class="form-label">Observações</label>
+                                <input type="text" id="extraction-notes" class="form-input">
+                            </div>
+                            <button type="submit" class="button-primary">Adicionar Registro</button>
+                        </form>
+                        <hr class="my-6">
+                        <div class="table-wrapper">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Volume (kg)</th>
+                                        <th>Destino</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="extraction-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h3 class="card-title">Gestão de Materiais</h3>
+                        <div id="inventory-list" class="space-y-4"></div>
+                    </div>
+                    <div class="card management-span-all">
+                        <h3 class="card-title">Gestão Financeira</h3>
+                        <div id="financial-summary" class="financial-summary-grid"></div>
+                        <div class="financial-details-grid">
+                            <div>
+                                <h4 class="font-bold mb-2">Registro de Vendas</h4>
+                                <form id="sales-form" class="space-y-4 p-4 bg-gray-50 rounded-md">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div class="input-group">
+                                            <label for="sale-date" class="form-label">Data</label>
+                                            <input type="date" id="sale-date" required class="form-input">
+                                        </div>
+                                        <div class="input-group">
+                                            <label for="sale-volume" class="form-label">Volume Vendido (kg)</label>
+                                            <input type="number" step="0.1" id="sale-volume" required class="form-input">
+                                        </div>
+                                        <div class="input-group">
+                                            <label for="sale-price" class="form-label">Preço/kg (R$)</label>
+                                            <input type="number" step="0.01" id="sale-price" required class="form-input">
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="button-success">Registrar Venda</button>
+                                </form>
+                                <div class="table-wrapper mt-4">
+                                    <table class="data-table">
+                                        <thead><tr><th>Data</th><th>Volume</th><th>Preço/kg</th><th>Total</th><th>Ações</th></tr></thead>
+                                        <tbody id="sales-table-body"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-bold mb-2">Registro de Custos</h4>
+                                <form id="costs-form" class="space-y-4 p-4 bg-gray-50 rounded-md">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div class="input-group">
+                                            <label for="cost-date" class="form-label">Data</label>
+                                            <input type="date" id="cost-date" required class="form-input">
+                                        </div>
+                                        <div class="input-group">
+                                            <label for="cost-description" class="form-label">Descrição</label>
+                                            <input type="text" id="cost-description" required class="form-input">
+                                        </div>
+                                        <div class="input-group">
+                                            <label for="cost-value" class="form-label">Valor (R$)</label>
+                                            <input type="number" step="0.01" id="cost-value" required class="form-input">
+                                        </div>
+                                    </div>
+                                    <button type="submit" class="button-danger">Registrar Custo</button>
+                                </form>
+                                <div class="table-wrapper mt-4">
+                                    <table class="data-table">
+                                        <thead><tr><th>Data</th><th>Descrição</th><th>Valor</th><th>Ações</th></tr></thead>
+                                        <tbody id="costs-table-body"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="reports-view" class="main-content hidden">
+                <div class="content-header">
+                    <h2>Relatórios</h2>
+                </div>
+                <div class="card">
+                    <h3 class="card-title">Filtros do Relatório</h3>
+                    <form id="report-filters-form" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="input-group">
+                            <label for="report-hive-select" class="form-label">Colmeia</label>
+                            <select id="report-hive-select" class="form-input"></select>
+                        </div>
+                        <div class="input-group">
+                            <label for="report-date-start" class="form-label">Data Inicial</label>
+                            <input type="date" id="report-date-start" class="form-input">
+                        </div>
+                        <div class="input-group">
+                            <label for="report-date-end" class="form-label">Data Final</label>
+                            <input type="date" id="report-date-end" class="form-input">
+                        </div>
+                        <div class="flex items-end">
+                             <button type="submit" class="button-primary w-full"><i class="fa-solid fa-filter mr-2"></i>Gerar Relatório</button>
+                        </div>
+                    </form>
+                </div>
+                <div id="report-results-container" class="hidden">
+                    <div class="content-header">
+                        <h3 class="text-xl font-bold">Resultados</h3>
+                        <button id="print-report-btn" class="button-secondary"><i class="fa-solid fa-print mr-2"></i>Imprimir</button>
+                    </div>
+                    <div class="card" id="printable-area">
+                        <h3 id="report-title" class="card-title text-center mb-6">Relatório de Desempenho</h3>
+                        <div id="report-summary" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 text-center"></div>
+                        <div class="table-wrapper">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Colmeia</th>
+                                        <th>Data</th>
+                                        <th>N° Coleta</th>
+                                        <th>Peso Colônia (kg)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="report-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="admin-view" class="main-content hidden">
+                 <div class="content-header">
+                    <h2>Painel de Administração</h2>
+                 </div>
+                 <div class="card">
+                     <h3 class="card-title">Gerenciar Usuários</h3>
+                     <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Email</th>
+                                    <th class="hidden sm:table-cell">Localização</th>
+                                    <th>Role</th>
+                                    <th>Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-users-table-body"></tbody>
+                        </table>
+                    </div>
+                 </div>
+            </section>
+        </div>
+    </div>
+
+    <div id="stock-modal" class="modal-backdrop">
+        <div class="modal-content">
+            <h3 id="stock-modal-title" class="modal-title">Gerir Estoque</h3>
+            <form id="stock-form">
+                <div class="input-group">
+                    <label for="stock-quantity" class="form-label">Quantidade</label>
+                    <input type="number" id="stock-quantity" required class="form-input" min="1">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="stock-modal-cancel" class="button-secondary">Cancelar</button>
+                    <button type="submit" class="button-primary">Confirmar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="request-access-modal" class="modal-backdrop">
+        <div class="modal-content">
+            <h3 class="modal-title">Solicitar Acesso a uma Colmeia</h3>
+            <form id="request-access-form">
+                <div class="input-group">
+                    <label for="record-id-input" class="form-label">Insira o N° da Colmeia</label>
+                    <input type="text" id="record-id-input" required class="form-input" placeholder="Ex: 42">
+                </div>
+                 <div class="input-group mt-2">
+                    <label for="owner-email-input" class="form-label">Insira o Email do proprietário</label>
+                    <input type="email" id="owner-email-input" required class="form-input" placeholder="Ex: dono@email.com">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="modal-cancel-btn" class="button-secondary">Cancelar</button>
+                    <button type="submit" class="button-primary">Enviar Solicitação</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="view-details-modal" class="modal-backdrop">
+        <div class="modal-content">
+             <div class="modal-header">
+                <h3 id="view-modal-title" class="modal-title">Detalhes da Colmeia</h3>
+                <button id="view-modal-close-btn" class="close-button">&times;</button>
+             </div>
+            <div id="view-modal-body" class="modal-body"></div>
+             <div class="modal-actions">
+                <button type="button" id="view-modal-close-btn-2" class="button-secondary">Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="profile-modal" class="modal-backdrop">
+        <div class="modal-content">
+             <div class="modal-header">
+                <h3 class="modal-title">Meu Perfil</h3>
+                <button id="profile-modal-close-btn" class="close-button">&times;</button>
+             </div>
+            <div id="profile-modal-body" class="modal-body">
+                <form id="profile-form">
+                    <div class="input-group">
+                        <label for="profile-name" class="form-label">Nome Completo</label>
+                        <input type="text" id="profile-name" required class="form-input">
+                    </div>
+                     <div class="input-group">
+                        <label for="profile-apiary" class="form-label">Nome da Apicultura</label>
+                        <input type="text" id="profile-apiary" required class="form-input">
+                    </div>
+                    <div class="input-group">
+                        <label class="form-label">Email</label>
+                        <p id="profile-email" class="mt-1 text-gray-500"></p>
+                    </div>
+                    <div class="input-group">
+                        <label class="form-label">Localização</label>
+                        <p id="profile-location" class="mt-1 text-gray-500"></p>
+                    </div>
+                    <div class="modal-actions">
+                         <button type="button" id="profile-modal-close-btn-2" class="button-secondary">Cancelar</button>
+                         <button type="submit" class="button-primary">Salvar Alterações</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <script type="module" src="script.js"></script>
+    <script type="module" src="relatorio.js"></script>
+    <script type="module" src="monitoramento.js"></script>
+    <script type="module" src="gestao.js"></script>
+</body>
+</html>
