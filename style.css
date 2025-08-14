@@ -556,7 +556,6 @@
       border-radius: 0.5rem;
   }
   
-  /* NOVO AJUSTE: Garante que o nome do item quebre a linha e não empurre os botões */
   .inventory-item-name {
       font-weight: 600;
       margin-right: 1rem; /* Adiciona espaço entre o nome e os botões */
@@ -686,7 +685,6 @@
         grid-template-columns: 1fr;
     }
 
-    /* NOVO AJUSTE: Posiciona o dropdown de notificações corretamente em telas menores */
     .notification-dropdown {
         right: 1rem;
         left: auto;
@@ -709,18 +707,34 @@
         padding: 0.75rem;
     }
 
-    .management-grid, .monitoring-grid {
+    .monitoring-grid {
         grid-template-columns: 1fr;
     }
-
+    
+    /* AJUSTE ADICIONAL: Força o grid da Gestão para uma única coluna */
     .management-grid {
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        grid-template-columns: 1fr;
     }
     
-    /* NOVO AJUSTE: Em telas muito pequenas, força o dropdown a ocupar a largura disponível */
     .notification-dropdown {
         left: 1rem;
         right: 1rem;
         width: auto;
     }
+  }
+
+  /* AJUSTE ADICIONAL: Para telas muito estreitas, empilha os itens de inventário */
+  @media (max-width: 400px) {
+      .inventory-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+      }
+      .inventory-item-name {
+        margin-right: 0;
+      }
+      .inventory-controls {
+        width: 100%;
+        justify-content: space-between;
+      }
   }
