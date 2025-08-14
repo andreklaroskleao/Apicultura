@@ -845,42 +845,38 @@ modalCancelBtn.addEventListener('click', () => requestAccessModal.classList.remo
 requestAccessForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const hiveId = document.getElementById('record-id-input').value.trim();
-    const ownerEmail = document.getElementById('owner-email-input').value.trim();
-    if (!hiveId || !ownerEmail) return;
+    if (!hiveId) return;
 
     try {
-        const usersQuery = query(collection(db, "users"), where("email", "==", ownerEmail));
-        const ownerSnapshot = await getDocs(usersQuery);
-        if (ownerSnapshot.empty) {
-            alert("Proprietário não encontrado com este email. Verifique o email digitado.");
-            return;
-        }
-        const ownerId = ownerSnapshot.docs[0].id;
-
         const hiveRef = doc(db, "hives", hiveId);
         const hiveSnap = await getDoc(hiveRef);
-        if (!hiveSnap.exists() || hiveSnap.data().ownerId !== ownerId) {
-            alert("Colmeia não encontrada ou não pertence a este proprietário. Verifique os dados.");
+
+        if (!hiveSnap.exists()) {
+            alert("Colmeia não encontrada. Verifique o número digitado.");
             return;
         }
         
+        const ownerId = hiveSnap.data().ownerId;
+
         if (ownerId === currentUser.uid) {
-            alert("Já é o dono desta colmeia.");
+            alert("Você já é o dono desta colmeia.");
             return;
         }
+
         const q = query(collection(db, "accessRequests"), where("hiveId", "==", hiveId), where("requesterId", "==", currentUser.uid));
         const existingRequests = await getDocs(q);
         if (!existingRequests.empty) {
             const existingStatus = existingRequests.docs[0].data().status;
             if (existingStatus === 'pending') {
-                 alert("Já solicitou acesso a esta colmeia. Aguarde a aprovação.");
+                 alert("Você já solicitou acesso a esta colmeia. Aguarde a aprovação.");
             } else if (existingStatus === 'accepted') {
-                alert("Já tem acesso a esta colmeia.");
+                alert("Você já tem acesso a esta colmeia.");
             } else {
                  alert("Sua solicitação anterior foi recusada.");
             }
             return;
         }
+
         await addDoc(collection(db, "accessRequests"), {
             requesterId: currentUser.uid,
             requesterName: currentUser.name || currentUser.email,
@@ -889,12 +885,14 @@ requestAccessForm.addEventListener('submit', async (e) => {
             status: 'pending',
             createdAt: new Date()
         });
+
         alert("Solicitação de acesso enviada!");
         requestAccessModal.classList.remove('is-open');
         requestAccessForm.reset();
+
     } catch (error) {
         console.error("Erro ao enviar solicitação de acesso:", error);
-        alert("Ocorreu um erro ao enviar a sua solicitação. Tente novamente.");
+        alert("Ocorreu um erro ao enviar a sua solicitação. Verifique se tem permissão para esta ação e tente novamente.");
     }
 });
 
