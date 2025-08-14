@@ -542,7 +542,7 @@ async function deleteHive(hiveId) {
             const hiveRef = doc(db, "hives", hiveId);
             batch.delete(hiveRef);
 
-            const collectionsQuery = query(collection(db, "collections"), where("hiveId", "==", hiveId));
+            const collectionsQuery = query(collection(db, "collections"), where("hiveId", "==", hiveId), where("accessibleTo", "array-contains", currentUser.uid));
             const collectionsSnapshot = await getDocs(collectionsQuery);
             collectionsSnapshot.forEach(doc => {
                 batch.delete(doc.ref);
@@ -958,7 +958,7 @@ async function handleAccessRequest(requestId, hiveId, requesterId, newStatus) {
             accessibleTo: arrayUnion(requesterId)
         });
 
-        const collectionsQuery = query(collection(db, "collections"), where("hiveId", "==", hiveId));
+      const collectionsQuery = query(collection(db, "collections"), where("hiveId", "==", hiveId), where("accessibleTo", "array-contains", currentUser.uid));
         const collectionsSnapshot = await getDocs(collectionsQuery);
         collectionsSnapshot.forEach(doc => {
             batch.update(doc.ref, { accessibleTo: arrayUnion(requesterId) });
@@ -978,4 +978,5 @@ async function handleAccessRequest(requestId, hiveId, requesterId, newStatus) {
 // --- INICIALIZAÇÃO ---
 (async () => {
     await fetchStates();
+
 })();
