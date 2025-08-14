@@ -948,30 +948,56 @@ document.addEventListener('click', async (e) => {
 
 async function handleAccessRequest(requestId, hiveId, requesterId, newStatus) {
     const requestRef = doc(db, "accessRequests", requestId);
-    const batch = writeBatch(db);
 
+    // --- Batch 1: Ações Críticas (Conceder Acesso à Colmeia e Atualizar Requisição) ---
+    const criticalBatch = writeBatch(db);
+    
     if (newStatus === 'accepted') {
         const hiveRef = doc(db, "hives", hiveId);
-        batch.update(hiveRef, {
+        criticalBatch.update(hiveRef, {
             accessibleTo: arrayUnion(requesterId)
-        });
-
-      const collectionsQuery = query(collection(db, "collections"), where("hiveId", "==", hiveId), where("accessibleTo", "array-contains", currentUser.uid));
-        const collectionsSnapshot = await getDocs(collectionsQuery);
-        collectionsSnapshot.forEach(doc => {
-            batch.update(doc.ref, { accessibleTo: arrayUnion(requesterId) });
         });
     }
     
-    batch.update(requestRef, { status: newStatus });
+    criticalBatch.update(requestRef, { status: newStatus });
 
     try {
-        await batch.commit();
+        await criticalBatch.commit(); // Executa o lote crítico primeiro.
+
+        // Se o lote crítico foi bem-sucedido e o acesso foi aceito,
+        // prossiga para atualizar o histórico de coletas em uma operação separada.
+        if (newStatus === 'accepted') {
+            console.log("Acesso principal concedido. Tentando atualizar o histórico de coletas...");
+            try {
+                const historicalBatch = writeBatch(db);
+                // A query precisa ser específica para o que o usuário (dono) pode ler
+                const collectionsQuery = query(
+                    collection(db, "collections"), 
+                    where("hiveId", "==", hiveId), 
+                    where("accessibleTo", "array-contains", currentUser.uid)
+                );
+                const collectionsSnapshot = await getDocs(collectionsQuery);
+                
+                collectionsSnapshot.forEach(collectionDoc => {
+                    historicalBatch.update(collectionDoc.ref, { accessibleTo: arrayUnion(requesterId) });
+                });
+
+                if (!collectionsSnapshot.empty) {
+                    await historicalBatch.commit();
+                    console.log("Histórico de coletas atualizado com sucesso.");
+                }
+            } catch (error) {
+                // Este erro não é fatal, o acesso principal já foi concedido.
+                console.error("Erro não-crítico ao atualizar o histórico de coletas:", error);
+                alert("Acesso à colmeia foi concedido com sucesso, mas ocorreu um erro ao compartilhar o histórico de coletas antigas. O novo usuário terá acesso à colmeia e a todas as novas coletas.");
+            }
+        }
     } catch (error) {
-        console.error("Erro ao processar solicitação de acesso:", error);
-        alert("Falha ao processar a solicitação.");
+        console.error("Erro crítico ao processar solicitação de acesso:", error);
+        alert("Falha ao processar a solicitação. O acesso não pôde ser concedido.");
     }
 }
+
 
 // --- INICIALIZAÇÃO ---
 (async () => {
