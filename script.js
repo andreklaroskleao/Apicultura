@@ -525,28 +525,26 @@ hiveForm.addEventListener('submit', async (e) => {
     }
 
     try {
-        await runTransaction(db, async (transaction) => {
-            const hiveRef = doc(db, "hives", newHiveId);
-            const hiveDoc = await transaction.get(hiveRef);
-
-            if (hiveDoc.exists()) {
-                throw new Error("Já existe uma colmeia com este número. Por favor, escolha outro.");
-            }
-
-            transaction.set(hiveRef, {
-                ownerId: currentUser.uid,
-                createdAt: new Date(),
-                accessibleTo: [currentUser.uid],
-                editors: []
-            });
+        const hiveRef = doc(db, "hives", newHiveId);
+        
+        // Usamos setDoc diretamente. Esta operação é enfileirada offline.
+        await setDoc(hiveRef, {
+            ownerId: currentUser.uid,
+            createdAt: new Date(),
+            accessibleTo: [currentUser.uid],
+            editors: []
         });
 
         hiveForm.reset();
-        console.log(`Colmeia #${newHiveId} criada com sucesso!`);
+        // A interface será atualizada imediatamente por causa do onSnapshot,
+        // mesmo que os dados ainda não tenham sido enviados ao servidor.
+        console.log(`Colmeia #${newHiveId} criada localmente! Sincronizando quando online.`);
 
     } catch (error) {
+        // Este erro agora só acontecerá se houver um problema real,
+        // como falha de permissão (que será detectada quando online).
         console.error("Erro ao adicionar colmeia:", error);
-        alert(error.message);
+        alert("Ocorreu um erro ao criar a colmeia. A causa mais provável é que este N° já existe. Verifique sua conexão e tente novamente.");
     }
 });
 
@@ -1035,3 +1033,4 @@ async function handleAccessRequest(requestId, hiveId, requesterId, newStatus) {
     // ------------------------------------
 
 })();
+
