@@ -208,7 +208,7 @@ reportsLink.addEventListener('click', (e) => { e.preventDefault(); showView(repo
 adminPanelLink.addEventListener('click', (e) => { e.preventDefault(); showView(adminView); });
 
 
-// --- LÓGICA DO MAPA ---
+// --- LÓGICA DO MAPA E CLIMA ---
 function initializeCreationMap(lat, lng) {
     if (creationMap) {
         creationMap.setView([lat, lng], 13);
@@ -241,22 +241,64 @@ function initializeFullMapView() {
         hiveMarkersLayer = L.layerGroup().addTo(fullMap);
     }
     
-    // Limpa os marcadores antigos
     hiveMarkersLayer.clearLayers();
 
-    // Adiciona um marcador para cada colmeia com localização
     userHives.forEach(hive => {
         if (hive.latitude && hive.longitude) {
             const marker = L.marker([hive.latitude, hive.longitude], { icon: hiveIcon })
                 .addTo(hiveMarkersLayer)
                 .bindPopup(`<b>Colmeia #${hive.id}</b><br>${hive.boxType || ''}`);
             
-            // Adiciona evento de clique para abrir o modal de detalhes
             marker.on('click', () => {
                 showHiveDetails(hive.id);
             });
         }
     });
+}
+
+// NOVA FUNÇÃO para traduzir o código do tempo em texto e ícone
+function getWeatherDescription(code) {
+    const weatherCodes = {
+        0: { desc: "Céu limpo", icon: "fa-sun" },
+        1: { desc: "Quase limpo", icon: "fa-cloud-sun" },
+        2: { desc: "Parcialmente nublado", icon: "fa-cloud-sun" },
+        3: { desc: "Nublado", icon: "fa-cloud" },
+        45: { desc: "Nevoeiro", icon: "fa-smog" },
+        48: { desc: "Nevoeiro com gelo", icon: "fa-smog" },
+        51: { desc: "Garoa leve", icon: "fa-cloud-rain" },
+        53: { desc: "Garoa moderada", icon: "fa-cloud-rain" },
+        55: { desc: "Garoa forte", icon: "fa-cloud-rain" },
+        61: { desc: "Chuva fraca", icon: "fa-cloud-showers-heavy" },
+        63: { desc: "Chuva moderada", icon: "fa-cloud-showers-heavy" },
+        65: { desc: "Chuva forte", icon: "fa-cloud-showers-heavy" },
+        80: { desc: "Pancadas de chuva fracas", icon: "fa-cloud-bolt" },
+        81: { desc: "Pancadas de chuva moderadas", icon: "fa-cloud-bolt" },
+        82: { desc: "Pancadas de chuva violentas", icon: "fa-cloud-bolt" }
+    };
+    return weatherCodes[code] || { desc: "Não disponível", icon: "fa-question-circle" };
+}
+
+// NOVA FUNÇÃO para buscar o clima atual
+async function fetchCurrentWeather(hiveId, lat, lon) {
+    const weatherElement = document.getElementById(`weather-info-${hiveId}`);
+    if (!weatherElement) return;
+
+    try {
+        const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
+        const data = await response.json();
+
+        if (data.current_weather) {
+            const temp = data.current_weather.temperature;
+            const weatherCode = data.current_weather.weathercode;
+            const { desc, icon } = getWeatherDescription(weatherCode);
+            weatherElement.innerHTML = `<i class="fa-solid ${icon} mr-2"></i> ${temp}°C - ${desc}`;
+        } else {
+            weatherElement.textContent = "Não disponível";
+        }
+    } catch (error) {
+        console.error("Erro ao buscar clima:", error);
+        weatherElement.textContent = "Erro ao carregar";
+    }
 }
 
 
@@ -489,7 +531,6 @@ function listenToHives(userId) {
         renderHivesTable();
         populateHiveSelects();
         renderCollectionsTable();
-        // Atualiza o mapa principal se ele já estiver inicializado
         if (fullMap) {
             initializeFullMapView();
         }
@@ -837,6 +878,8 @@ async function showHiveDetails(hiveId) {
     }
     
     const mapHtml = hive.latitude ? `<div id="hive-detail-map-${hive.id}"></div>` : '<p class="text-sm text-gray-500 mt-2">Localização não registrada.</p>';
+    const weatherHtml = hive.latitude ? `<p><strong>Clima Atual:</strong> <span id="weather-info-${hive.id}">A carregar... <i class="fa-solid fa-spinner fa-spin"></i></span></p>` : '';
+
 
     viewModalBody.innerHTML = `
         <div class="flex justify-between items-start">
@@ -844,6 +887,7 @@ async function showHiveDetails(hiveId) {
                 <p><strong>Tipo de Caixa:</strong> ${hive.boxType || 'Não informado'}</p>
                 <p><strong>Rainha:</strong> ${hive.queen || 'Não informado'}</p>
                 <p><strong>Ano de Instalação:</strong> ${hive.installationYear || 'Não informado'}</p>
+                ${weatherHtml}
             </div>
             ${isOwner ? `<button class="open-edit-hive-btn button-primary text-sm" data-hiveid="${hive.id}">
                 <i class="fa-solid fa-pencil mr-2"></i>Editar
@@ -860,6 +904,7 @@ async function showHiveDetails(hiveId) {
     if (hive.latitude) {
         setTimeout(() => {
             displayDetailMap(hive.id, hive.latitude, hive.longitude);
+            fetchCurrentWeather(hive.id, hive.latitude, hive.longitude);
         }, 100);
     }
 }
