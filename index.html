@@ -11,6 +11,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="style.css">
@@ -89,6 +91,7 @@
                 </div>
                 <nav class="main-nav">
                     <a href="#" id="dashboard-link" class="nav-link active">Painel</a>
+                    <a href="#" id="map-view-link" class="nav-link">Mapa</a>
                     <a href="#" id="monitoring-link" class="nav-link">Monitoramento</a>
                     <a href="#" id="management-link" class="nav-link">Gestão</a>
                     <a href="#" id="reports-link" class="nav-link">Relatórios</a>
@@ -191,10 +194,42 @@
                     <div class="space-y-6">
                         <div class="card">
                              <h3 class="card-title">Gestão de Colmeias</h3>
-                             <form id="hive-form" class="flex gap-4 mb-4">
-                                <input type="text" id="hive-id-input" required class="form-input" placeholder="N° da nova colmeia">
-                                <button type="submit" class="button-success whitespace-nowrap">Adicionar</button>
+                             <form id="hive-form" class="space-y-4">
+                                <div class="input-group">
+                                     <label for="hive-id-input" class="form-label">N° da nova colmeia</label>
+                                    <input type="text" id="hive-id-input" required class="form-input" placeholder="Ex: 101">
+                                </div>
+                                <div class="input-group">
+                                    <label for="hive-box-type" class="form-label">Tipo de Caixa</label>
+                                    <select id="hive-box-type" required class="form-input">
+                                        <option value="">Selecione...</option>
+                                        <option value="Langstroth">Langstroth</option>
+                                        <option value="Dadant">Dadant</option>
+                                        <option value="Warre">Warre</option>
+                                        <option value="Top Bar">Top Bar (Barra Superior)</option>
+                                        <option value="Nacional">Nacional (Brasileira)</option>
+                                        <option value="Modelo INPA">Modelo INPA</option>
+                                        <option value="Modelo PNN">Modelo PNN</option>
+                                        <option value="Modelo Santos">Modelo Santos</option>
+                                        <option value="Caixa Racional">Caixa Racional</option>
+                                        <option value="Outro">Outro</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <label for="hive-queen" class="form-label">Rainha (espécie/origem)</label>
+                                    <input type="text" id="hive-queen" required class="form-input" placeholder="Ex: Italiana F1">
+                                </div>
+                                 <div class="input-group">
+                                    <label for="hive-installation-year" class="form-label">Ano de Instalação</label>
+                                    <input type="number" id="hive-installation-year" required class="form-input" placeholder="Ex: 2024">
+                                </div>
+                                <div class="input-group">
+                                    <label class="form-label">Localização (arraste o ícone)</label>
+                                    <div id="hive-map-container"></div>
+                                </div>
+                                <button type="submit" class="button-success w-full">Adicionar Colmeia</button>
                              </form>
+                             <hr class="my-6">
                              <div class="table-wrapper">
                                  <table class="data-table">
                                      <thead>
@@ -216,6 +251,13 @@
                     </div>
                  </div>
             </main>
+
+            <section id="map-view" class="main-content hidden">
+                <div class="content-header">
+                    <h2>Mapa de Colmeias</h2>
+                </div>
+                <div id="full-map-container"></div>
+            </section>
 
             <section id="monitoring-view" class="main-content hidden">
                 <div class="content-header">
@@ -546,6 +588,48 @@
                     </div>
                 </form>
             </div>
+        </div>
+    </div>
+
+    <div id="edit-hive-modal" class="modal-backdrop">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="edit-hive-modal-title" class="modal-title">Editar Dados da Colmeia</h3>
+                <button id="edit-hive-modal-close-btn" class="close-button">&times;</button>
+            </div>
+            <form id="edit-hive-form">
+                <input type="hidden" id="edit-hive-id">
+                <div class="space-y-4">
+                    <div class="input-group">
+                        <label for="edit-hive-box-type" class="form-label">Tipo de Caixa</label>
+                        <select id="edit-hive-box-type" required class="form-input">
+                            <option value="">Selecione...</option>
+                            <option value="Langstroth">Langstroth</option>
+                            <option value="Dadant">Dadant</option>
+                            <option value="Warre">Warre</option>
+                            <option value="Top Bar">Top Bar (Barra Superior)</option>
+                            <option value="Nacional">Nacional (Brasileira)</option>
+                            <option value="Modelo INPA">Modelo INPA</option>
+                            <option value="Modelo PNN">Modelo PNN</option>
+                            <option value="Modelo Santos">Modelo Santos</option>
+                            <option value="Caixa Racional">Caixa Racional</option>
+                            <option value="Outro">Outro</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="edit-hive-queen" class="form-label">Rainha (espécie/origem)</label>
+                        <input type="text" id="edit-hive-queen" required class="form-input">
+                    </div>
+                    <div class="input-group">
+                        <label for="edit-hive-installation-year" class="form-label">Ano de Instalação</label>
+                        <input type="number" id="edit-hive-installation-year" required class="form-input">
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="edit-hive-modal-cancel-btn" class="button-secondary">Cancelar</button>
+                    <button type="submit" class="button-primary">Salvar Alterações</button>
+                </div>
+            </form>
         </div>
     </div>
 
