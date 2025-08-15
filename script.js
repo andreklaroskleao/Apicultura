@@ -84,14 +84,14 @@ const registerStateSelect = document.getElementById('register-state');
 const registerCitySelect = document.getElementById('register-city');
 // Views
 const dashboardView = document.getElementById('dashboard-view');
-const mapView = document.getElementById('map-view'); // NOVA VIEW
+const mapView = document.getElementById('map-view'); 
 const monitoringView = document.getElementById('monitoring-view');
 const managementView = document.getElementById('management-view');
 const reportsView = document.getElementById('reports-view');
 const adminView = document.getElementById('admin-view');
 // Links de Navegação
 const dashboardLink = document.getElementById('dashboard-link');
-const mapViewLink = document.getElementById('map-view-link'); // NOVO LINK
+const mapViewLink = document.getElementById('map-view-link');
 const monitoringLink = document.getElementById('monitoring-link');
 const managementLink = document.getElementById('management-link');
 const reportsLink = document.getElementById('reports-link');
@@ -141,9 +141,11 @@ let allUserCollections = [];
 // Variáveis para os mapas
 let creationMap = null;
 let creationMarker = null;
-let fullMap = null; // Mapa principal
+let fullMap = null;
+let editMap = null; // Mapa para o modal de edição
+let editMarker = null; // Marcador para o mapa de edição
 let hiveIcon = null;
-let hiveMarkersLayer = null; // Camada para os marcadores
+let hiveMarkersLayer = null;
 
 // EXPORTAÇÕES para outros módulos
 export { db, currentUser, userHives };
@@ -236,9 +238,8 @@ function initializeCreationMap(lat, lng) {
 
 function initializeFullMapView() {
     if (!fullMap) {
-        // CORREÇÃO: Adiciona coordenadas padrão para evitar erro se currentUser.latitude não existir.
-        const initialLat = currentUser?.latitude || -31.33; // Usa a latitude do usuário ou o padrão de Bagé
-        const initialLng = currentUser?.longitude || -54.10; // Usa a longitude do usuário ou o padrão de Bagé
+        const initialLat = currentUser?.latitude || -31.33; 
+        const initialLng = currentUser?.longitude || -54.10; 
 
         fullMap = L.map('full-map-container').setView([initialLat, initialLng], 10);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(fullMap);
@@ -258,6 +259,23 @@ function initializeFullMapView() {
             });
         }
     });
+}
+
+// NOVA FUNÇÃO para inicializar o mapa de edição
+function initializeEditMap(lat, lon) {
+    if (editMap) {
+        editMap.setView([lat, lon], 15);
+        editMarker.setLatLng([lat, lon]);
+    } else {
+        editMap = L.map('edit-hive-map-container').setView([lat, lon], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(editMap);
+        editMarker = L.marker([lat, lon], {
+            draggable: true,
+            icon: hiveIcon
+        }).addTo(editMap);
+    }
+    // Garante que o mapa seja renderizado corretamente dentro do modal
+    setTimeout(() => editMap.invalidateSize(), 200);
 }
 
 function getWeatherDescription(code) {
@@ -1018,15 +1036,26 @@ function openEditHiveModal(hiveId) {
 
     viewDetailsModal.classList.remove('is-open');
     editHiveModal.classList.add('is-open');
+
+    // Inicializa ou atualiza o mapa de edição com a localização atual da colmeia
+    const lat = hive.latitude || currentUser.latitude || -31.33;
+    const lon = hive.longitude || currentUser.longitude || -54.10;
+    initializeEditMap(lat, lon);
 }
 
 editHiveForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const hiveId = editHiveIdInput.value;
+    
+    // Pega as novas coordenadas do marcador no mapa de edição
+    const { lat, lng } = editMarker.getLatLng();
+
     const dataToUpdate = {
         boxType: document.getElementById('edit-hive-box-type').value,
         queen: document.getElementById('edit-hive-queen').value.trim(),
-        installationYear: parseInt(document.getElementById('edit-hive-installation-year').value)
+        installationYear: parseInt(document.getElementById('edit-hive-installation-year').value),
+        latitude: lat,
+        longitude: lng
     };
 
     if (!dataToUpdate.boxType || !dataToUpdate.queen || !dataToUpdate.installationYear) {
