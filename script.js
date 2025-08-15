@@ -49,8 +49,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// --- HABILITAR PERSISTÊNCIA OFFLINE ---
-// Adicionado este bloco para ativar o cache de dados do Firestore
+// --- HABILITAR PERSISTÊNCIA OFFLLINE ---
 try {
     await enableIndexedDbPersistence(db);
     console.log("Persistência offline do Firestore ativada!");
@@ -85,12 +84,14 @@ const registerStateSelect = document.getElementById('register-state');
 const registerCitySelect = document.getElementById('register-city');
 // Views
 const dashboardView = document.getElementById('dashboard-view');
+const mapView = document.getElementById('map-view'); // NOVA VIEW
 const monitoringView = document.getElementById('monitoring-view');
 const managementView = document.getElementById('management-view');
 const reportsView = document.getElementById('reports-view');
 const adminView = document.getElementById('admin-view');
 // Links de Navegação
 const dashboardLink = document.getElementById('dashboard-link');
+const mapViewLink = document.getElementById('map-view-link'); // NOVO LINK
 const monitoringLink = document.getElementById('monitoring-link');
 const managementLink = document.getElementById('management-link');
 const reportsLink = document.getElementById('reports-link');
@@ -120,6 +121,13 @@ const hiveIdInput = document.getElementById('hive-id-input');
 const hivesTableBody = document.getElementById('hives-table-body');
 // Filtro de Coletas
 const collectionFilterInput = document.getElementById('collection-filter-input');
+// Modal de Edição de Colmeia
+const editHiveModal = document.getElementById('edit-hive-modal');
+const editHiveForm = document.getElementById('edit-hive-form');
+const editHiveModalTitle = document.getElementById('edit-hive-modal-title');
+const editHiveIdInput = document.getElementById('edit-hive-id');
+const editHiveModalCloseBtn = document.getElementById('edit-hive-modal-close-btn');
+const editHiveModalCancelBtn = document.getElementById('edit-hive-modal-cancel-btn');
 
 
 let currentUser = null;
@@ -127,8 +135,15 @@ let unsubscribeFromCollections = null;
 let unsubscribeFromNotifications = null;
 let unsubscribeFromHives = null;
 let notificationSound;
-let userHives = []; // Armazena as permissões e dados das colmeias
-let allUserCollections = []; // Armazena os dados das coletas
+let userHives = []; 
+let allUserCollections = []; 
+
+// Variáveis para os mapas
+let creationMap = null;
+let creationMarker = null;
+let fullMap = null; // Mapa principal
+let hiveIcon = null;
+let hiveMarkersLayer = null; // Camada para os marcadores
 
 // EXPORTAÇÕES para outros módulos
 export { db, currentUser, userHives };
@@ -161,6 +176,7 @@ registerTab.addEventListener('click', () => switchTabs(false));
 
 function showView(viewToShow) {
     dashboardView.classList.add('hidden');
+    mapView.classList.add('hidden');
     monitoringView.classList.add('hidden');
     managementView.classList.add('hidden');
     reportsView.classList.add('hidden');
@@ -169,7 +185,15 @@ function showView(viewToShow) {
     viewToShow.classList.remove('hidden');
 
     document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
-    if (viewToShow === dashboardView) dashboardLink.classList.add('active');
+    
+    if (viewToShow === dashboardView) {
+        dashboardLink.classList.add('active');
+        setTimeout(() => { if (creationMap) creationMap.invalidateSize(); }, 100);
+    }
+    if (viewToShow === mapView) {
+        mapViewLink.classList.add('active');
+        setTimeout(() => { if (fullMap) fullMap.invalidateSize(); }, 100);
+    }
     if (viewToShow === monitoringView) monitoringLink.classList.add('active');
     if (viewToShow === managementView) managementLink.classList.add('active');
     if (viewToShow === reportsView) reportsLink.classList.add('active');
@@ -177,10 +201,63 @@ function showView(viewToShow) {
 };
 
 dashboardLink.addEventListener('click', (e) => { e.preventDefault(); showView(dashboardView); });
+mapViewLink.addEventListener('click', (e) => { e.preventDefault(); showView(mapView); initializeFullMapView(); });
 monitoringLink.addEventListener('click', (e) => { e.preventDefault(); showView(monitoringView); initializeMonitoringPage(); });
 managementLink.addEventListener('click', (e) => { e.preventDefault(); showView(managementView); initializeManagementPage(); });
 reportsLink.addEventListener('click', (e) => { e.preventDefault(); showView(reportsView); initializeReportPage(); });
 adminPanelLink.addEventListener('click', (e) => { e.preventDefault(); showView(adminView); });
+
+
+// --- LÓGICA DO MAPA ---
+function initializeCreationMap(lat, lng) {
+    if (creationMap) {
+        creationMap.setView([lat, lng], 13);
+        creationMarker.setLatLng([lat, lng]);
+        return;
+    }
+
+    hiveIcon = L.icon({
+        iconUrl: 'hive-icon.png',
+        iconSize: [40, 40],
+        iconAnchor: [20, 40],
+    });
+
+    creationMap = L.map('hive-map-container').setView([lat, lng], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(creationMap);
+
+    creationMarker = L.marker([lat, lng], { 
+        draggable: true,
+        icon: hiveIcon
+    }).addTo(creationMap);
+}
+
+function initializeFullMapView() {
+    if (!fullMap) {
+        fullMap = L.map('full-map-container').setView([currentUser.latitude, currentUser.longitude], 10);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(fullMap);
+        hiveMarkersLayer = L.layerGroup().addTo(fullMap);
+    }
+    
+    // Limpa os marcadores antigos
+    hiveMarkersLayer.clearLayers();
+
+    // Adiciona um marcador para cada colmeia com localização
+    userHives.forEach(hive => {
+        if (hive.latitude && hive.longitude) {
+            const marker = L.marker([hive.latitude, hive.longitude], { icon: hiveIcon })
+                .addTo(hiveMarkersLayer)
+                .bindPopup(`<b>Colmeia #${hive.id}</b><br>${hive.boxType || ''}`);
+            
+            // Adiciona evento de clique para abrir o modal de detalhes
+            marker.on('click', () => {
+                showHiveDetails(hive.id);
+            });
+        }
+    });
+}
 
 
 // --- API IBGE E GEOLOCALIZAÇÃO ---
@@ -273,6 +350,7 @@ onAuthStateChanged(auth, async (user) => {
             }
             
             showView(dashboardView);
+            initializeCreationMap(currentUser.latitude || -31.33, currentUser.longitude || -54.10);
             listenToHives(currentUser.uid);
             listenToCollections(currentUser.uid);
             listenForNotifications(currentUser.uid);
@@ -410,7 +488,11 @@ function listenToHives(userId) {
 
         renderHivesTable();
         populateHiveSelects();
-        renderCollectionsTable(); // Redesenha a tabela de coletas com as permissões atualizadas
+        renderCollectionsTable();
+        // Atualiza o mapa principal se ele já estiver inicializado
+        if (fullMap) {
+            initializeFullMapView();
+        }
     });
 }
 
@@ -420,7 +502,7 @@ function listenToCollections(userId) {
 
     unsubscribeFromCollections = onSnapshot(q, (snapshot) => {
         allUserCollections = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        renderCollectionsTable(); // Redesenha a tabela de coletas com os dados atualizados
+        renderCollectionsTable();
     }, (error) => {
         console.error("Erro ao buscar coletas:", error);
         dataTableBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-500">Erro ao carregar coletas.</td></tr>`;
@@ -459,10 +541,7 @@ function renderCollectionsTable() {
         dataTableBody.appendChild(tr);
     });
 
-    // Re-aplicar filtro após renderizar
     collectionFilterInput.dispatchEvent(new Event('input'));
-    
-    // Anexar event listeners aos novos botões
     attachTableActionListeners();
 }
 
@@ -492,14 +571,14 @@ function renderHivesTable() {
         tr.innerHTML = `
             <td class="px-6 py-4 whitespace-nowrap font-medium">#${hive.id}</td>
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
-                <button class="share-hive-btn text-blue-600 hover:text-blue-900" data-hiveid="${hive.id}" title="Partilhar/Gerir Acesso"><i class="fa-solid fa-share-nodes"></i></button>
+                <button class="view-hive-btn text-blue-600 hover:text-blue-900" data-hiveid="${hive.id}" title="Visualizar / Gerir Colmeia"><i class="fa-solid fa-eye"></i></button>
                 <button class="delete-hive-btn text-red-600 hover:text-red-900" data-hiveid="${hive.id}" title="Excluir Colmeia"><i class="fa-solid fa-trash"></i></button>
             </td>
         `;
         hivesTableBody.appendChild(tr);
     });
 
-    document.querySelectorAll('.share-hive-btn').forEach(btn => {
+    document.querySelectorAll('.view-hive-btn').forEach(btn => {
         btn.addEventListener('click', (e) => showHiveDetails(e.currentTarget.dataset.hiveid));
     });
     document.querySelectorAll('.delete-hive-btn').forEach(btn => {
@@ -519,32 +598,40 @@ function populateHiveSelects() {
 hiveForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const newHiveId = hiveIdInput.value.trim();
-    if (!newHiveId) {
-        alert("O número da nova colmeia é obrigatório.");
+    const boxType = document.getElementById('hive-box-type').value;
+    const queen = document.getElementById('hive-queen').value.trim();
+    const installationYear = document.getElementById('hive-installation-year').value;
+
+    if (!newHiveId || !boxType || !queen || !installationYear) {
+        alert("Todos os campos para adicionar a colmeia são obrigatórios.");
         return;
     }
+
+    const { lat, lng } = creationMarker.getLatLng();
 
     try {
         const hiveRef = doc(db, "hives", newHiveId);
         
-        // Usamos setDoc diretamente. Esta operação é enfileirada offline.
         await setDoc(hiveRef, {
             ownerId: currentUser.uid,
             createdAt: new Date(),
             accessibleTo: [currentUser.uid],
-            editors: []
+            editors: [],
+            boxType: boxType,
+            queen: queen,
+            installationYear: parseInt(installationYear),
+            latitude: lat,
+            longitude: lng
         });
 
         hiveForm.reset();
-        // A interface será atualizada imediatamente por causa do onSnapshot,
-        // mesmo que os dados ainda não tenham sido enviados ao servidor.
-        console.log(`Colmeia #${newHiveId} criada localmente! Sincronizando quando online.`);
+        initializeCreationMap(currentUser.latitude, currentUser.longitude);
+        
+        console.log(`Colmeia #${newHiveId} criada com sucesso.`);
 
     } catch (error) {
-        // Este erro agora só acontecerá se houver um problema real,
-        // como falha de permissão (que será detectada quando online).
         console.error("Erro ao adicionar colmeia:", error);
-        alert("Ocorreu um erro ao criar a colmeia. A causa mais provável é que este N° já existe. Verifique sua conexão e tente novamente.");
+        alert("Ocorreu um erro ao criar a colmeia. A causa mais provável é que este N° já existe.");
     }
 });
 
@@ -607,7 +694,7 @@ dataForm.addEventListener('submit', async (e) => {
     try {
         if (collectionId) {
             const collectionRef = doc(db, "collections", collectionId);
-            const {createdAt, ...updateData} = collectionData; // Não atualiza o createdAt
+            const {createdAt, ...updateData} = collectionData;
             await updateDoc(collectionRef, updateData);
         } else {
             collectionData.createdAt = new Date();
@@ -684,12 +771,31 @@ collectionFilterInput.addEventListener('input', (e) => {
 
 
 // --- LÓGICA DE VISUALIZAÇÃO DE DETALHES E GESTÃO DE PERMISSÕES ---
+function displayDetailMap(hiveId, lat, lng) {
+    const mapContainerId = `hive-detail-map-${hiveId}`;
+    const container = document.getElementById(mapContainerId);
+    if (!container) return; 
+
+    container.innerHTML = '';
+    
+    const detailMap = L.map(container, {
+        zoomControl: false, 
+        scrollWheelZoom: false,
+        dragging: false 
+    }).setView([lat, lng], 15);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(detailMap);
+
+    L.marker([lat, lng], { icon: hiveIcon }).addTo(detailMap);
+}
+
+
 async function showHiveDetails(hiveId) {
     const hive = userHives.find(h => h.id === hiveId);
     if (!hive) return;
 
     const isOwner = hive.ownerId === currentUser.uid;
-    viewModalTitle.textContent = `Detalhes e Acesso da Colmeia #${hive.id}`;
+    viewModalTitle.textContent = `Detalhes da Colmeia #${hive.id}`;
     
     let sharedWithHtml = '<p class="text-sm text-gray-500">Ninguém mais tem acesso.</p>';
     if (hive.accessibleTo && hive.accessibleTo.length > 1) {
@@ -729,12 +835,33 @@ async function showHiveDetails(hiveId) {
             </ul>
         `;
     }
+    
+    const mapHtml = hive.latitude ? `<div id="hive-detail-map-${hive.id}"></div>` : '<p class="text-sm text-gray-500 mt-2">Localização não registrada.</p>';
 
     viewModalBody.innerHTML = `
-        <p>Aqui você pode gerenciar quem tem acesso aos dados desta colmeia.</p>
+        <div class="flex justify-between items-start">
+            <div class="space-y-2 mb-4">
+                <p><strong>Tipo de Caixa:</strong> ${hive.boxType || 'Não informado'}</p>
+                <p><strong>Rainha:</strong> ${hive.queen || 'Não informado'}</p>
+                <p><strong>Ano de Instalação:</strong> ${hive.installationYear || 'Não informado'}</p>
+            </div>
+            ${isOwner ? `<button class="open-edit-hive-btn button-primary text-sm" data-hiveid="${hive.id}">
+                <i class="fa-solid fa-pencil mr-2"></i>Editar
+            </button>` : ''}
+        </div>
+        ${mapHtml}
+        <hr class="my-4">
+        <h4 class="font-semibold">Gestão de Acesso</h4>
+        <p class="text-sm text-gray-500 mb-2">Aqui você pode gerenciar quem tem acesso aos dados desta colmeia.</p>
         ${sharedWithHtml}
     `;
     viewDetailsModal.classList.add('is-open');
+
+    if (hive.latitude) {
+        setTimeout(() => {
+            displayDetailMap(hive.id, hive.latitude, hive.longitude);
+        }, 100);
+    }
 }
 
 async function showCollectionDetails(collId){
@@ -810,13 +937,69 @@ viewModalBody.addEventListener('click', (e) => {
     if (editToggle) {
         const { hiveid, userid } = editToggle.dataset;
         toggleEditPermission(hiveid, userid, editToggle.checked);
+        return; 
     }
+
     const removeBtn = e.target.closest('.remove-share-btn');
     if (removeBtn) {
         const { hiveid, userid, username } = removeBtn.dataset;
         removeShare(hiveid, userid, username);
+        return;
+    }
+
+    const openEditBtn = e.target.closest('.open-edit-hive-btn');
+    if(openEditBtn){
+        const { hiveid } = openEditBtn.dataset;
+        openEditHiveModal(hiveid);
     }
 });
+
+// --- LÓGICA DE EDIÇÃO DA COLMEIA ---
+
+function openEditHiveModal(hiveId) {
+    const hive = userHives.find(h => h.id === hiveId);
+    if (!hive) {
+        alert("Colmeia não encontrada para edição.");
+        return;
+    }
+
+    editHiveModalTitle.textContent = `Editar Dados da Colmeia #${hive.id}`;
+    editHiveIdInput.value = hive.id;
+    document.getElementById('edit-hive-box-type').value = hive.boxType || '';
+    document.getElementById('edit-hive-queen').value = hive.queen || '';
+    document.getElementById('edit-hive-installation-year').value = hive.installationYear || '';
+
+    viewDetailsModal.classList.remove('is-open');
+    editHiveModal.classList.add('is-open');
+}
+
+editHiveForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const hiveId = editHiveIdInput.value;
+    const dataToUpdate = {
+        boxType: document.getElementById('edit-hive-box-type').value,
+        queen: document.getElementById('edit-hive-queen').value.trim(),
+        installationYear: parseInt(document.getElementById('edit-hive-installation-year').value)
+    };
+
+    if (!dataToUpdate.boxType || !dataToUpdate.queen || !dataToUpdate.installationYear) {
+        alert("Todos os campos são obrigatórios.");
+        return;
+    }
+
+    try {
+        const hiveRef = doc(db, "hives", hiveId);
+        await updateDoc(hiveRef, dataToUpdate);
+        alert("Dados da colmeia atualizados com sucesso!");
+        editHiveModal.classList.remove('is-open');
+    } catch (error) {
+        console.error("Erro ao atualizar a colmeia:", error);
+        alert("Falha ao atualizar os dados da colmeia.");
+    }
+});
+
+editHiveModalCloseBtn.addEventListener('click', () => editHiveModal.classList.remove('is-open'));
+editHiveModalCancelBtn.addEventListener('click', () => editHiveModal.classList.remove('is-open'));
 
 
 // --- LÓGICA DE ADMINISTRAÇÃO ---
@@ -962,8 +1145,6 @@ document.addEventListener('click', async (e) => {
 
 async function handleAccessRequest(requestId, hiveId, requesterId, newStatus) {
     const requestRef = doc(db, "accessRequests", requestId);
-
-    // --- Batch 1: Ações Críticas (Conceder Acesso à Colmeia e Atualizar Requisição) ---
     const criticalBatch = writeBatch(db);
     
     if (newStatus === 'accepted') {
@@ -976,15 +1157,12 @@ async function handleAccessRequest(requestId, hiveId, requesterId, newStatus) {
     criticalBatch.update(requestRef, { status: newStatus });
 
     try {
-        await criticalBatch.commit(); // Executa o lote crítico primeiro.
+        await criticalBatch.commit(); 
 
-        // Se o lote crítico foi bem-sucedido e o acesso foi aceito,
-        // prossiga para atualizar o histórico de coletas em uma operação separada.
         if (newStatus === 'accepted') {
             console.log("Acesso principal concedido. Tentando atualizar o histórico de coletas...");
             try {
                 const historicalBatch = writeBatch(db);
-                // A query precisa ser específica para o que o usuário (dono) pode ler
                 const collectionsQuery = query(
                     collection(db, "collections"), 
                     where("hiveId", "==", hiveId), 
@@ -1001,7 +1179,6 @@ async function handleAccessRequest(requestId, hiveId, requesterId, newStatus) {
                     console.log("Histórico de coletas atualizado com sucesso.");
                 }
             } catch (error) {
-                // Este erro não é fatal, o acesso principal já foi concedido.
                 console.error("Erro não-crítico ao atualizar o histórico de coletas:", error);
                 alert("Acesso à colmeia foi concedido com sucesso, mas ocorreu um erro ao compartilhar o histórico de coletas antigas. O novo usuário terá acesso à colmeia e a todas as novas coletas.");
             }
@@ -1017,8 +1194,6 @@ async function handleAccessRequest(requestId, hiveId, requesterId, newStatus) {
 (async () => {
     await fetchStates();
     
-    // --- REGISTRO DO SERVICE WORKER ---
-    // Adicionado este bloco para registrar o service worker que torna o app offline
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/service-worker.js')
@@ -1030,7 +1205,5 @@ async function handleAccessRequest(requestId, hiveId, requesterId, newStatus) {
           });
       });
     }
-    // ------------------------------------
 
 })();
-
