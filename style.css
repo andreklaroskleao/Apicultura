@@ -156,7 +156,6 @@
     text-decoration: none;
     border-radius: 0.375rem;
     transition: all 0.2s ease-in-out;
-    white-space: nowrap; /* Garante que o texto do link não quebre */
   }
   .nav-link:hover {
     background-color: var(--color-bg);
@@ -558,16 +557,12 @@
   
   .inventory-item-name {
       font-weight: 600;
-      margin-right: 1rem; /* Adiciona espaço entre o nome e os botões */
-      flex-shrink: 1; /* Permite que este item encolha se necessário */
-      word-break: break-word; /* Força a quebra de palavras longas */
   }
   
   .inventory-controls {
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      flex-shrink: 0; /* Impede que os botões encolham */
   }
   
   .stock-quantity {
@@ -623,6 +618,33 @@
       grid-template-columns: 1fr 1fr;
       gap: 2rem;
   }
+
+  /* --- ESTILOS DO MAPA --- */
+  #hive-map-container, #hive-detail-map, #full-map-container {
+    width: 100%;
+    border-radius: 0.375rem;
+    border: 1px solid var(--color-border);
+    margin-top: 0.5rem;
+    z-index: 0; 
+  }
+
+  #hive-map-container {
+    height: 250px;
+  }
+  #hive-detail-map {
+    height: 200px;
+    margin-top: 1rem;
+  }
+  #full-map-container {
+      height: calc(100vh - 200px); /* Ocupa a altura da tela menos o cabeçalho e paddings */
+  }
+  
+  @media (max-width: 768px) {
+      .financial-details-grid {
+          grid-template-columns: 1fr;
+      }
+  }
+  
   
   @media print {
     body * {
@@ -648,28 +670,21 @@
   
   
   /* --- RESPONSIVIDADE --- */
-  
-  /* AJUSTES PARA TABLETS E DISPOSITIVOS MENORES (ATÉ 768px) */
   @media (max-width: 768px) {
     .app-header {
       flex-direction: column;
       align-items: flex-start;
       gap: 1rem;
-      padding: 1rem; /* Padding reduzido para mobile */
     }
-    
     .main-nav {
       width: 100%;
-      overflow-x: auto; /* Permite rolagem horizontal */
-      -ms-overflow-style: none;  /* Esconde a barra de rolagem (IE/Edge) */
-      scrollbar-width: none;  /* Esconde a barra de rolagem (Firefox) */
-      padding-bottom: 10px;
-      margin-bottom: -10px;
+      justify-content: space-around;
+      gap: 0.2rem;
+      flex-wrap: wrap;
     }
-    .main-nav::-webkit-scrollbar {
-      display: none; /* Esconde a barra de rolagem (Chrome/Safari) */
+     .nav-link {
+      padding: 0.5rem;
     }
-
     .main-content {
       padding: 1rem;
     }
@@ -681,18 +696,7 @@
     .hidden-md {
       display: none;
     }
-    .financial-details-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .notification-dropdown {
-        right: 1rem;
-        left: auto;
-        max-width: calc(100vw - 2rem); /* Garante que não ultrapasse a tela */
-    }
   }
-  
-  /* AJUSTES PARA CELULARES (ATÉ 640px) */
   @media (max-width: 640px) {
     .user-menu #user-info {
       display: none;
@@ -700,41 +704,4 @@
     .hidden-sm {
       display: none;
     }
-    .auth-card {
-        padding: 1.5rem;
-    }
-    .main-content {
-        padding: 0.75rem;
-    }
-
-    .monitoring-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    /* AJUSTE ADICIONAL: Força o grid da Gestão para uma única coluna */
-    .management-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .notification-dropdown {
-        left: 1rem;
-        right: 1rem;
-        width: auto;
-    }
-  }
-
-  /* AJUSTE ADICIONAL: Para telas muito estreitas, empilha os itens de inventário */
-  @media (max-width: 400px) {
-      .inventory-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.75rem;
-      }
-      .inventory-item-name {
-        margin-right: 0;
-      }
-      .inventory-controls {
-        width: 100%;
-        justify-content: space-between;
-      }
   }
