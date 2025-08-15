@@ -236,7 +236,11 @@ function initializeCreationMap(lat, lng) {
 
 function initializeFullMapView() {
     if (!fullMap) {
-        fullMap = L.map('full-map-container').setView([currentUser.latitude, currentUser.longitude], 10);
+        // CORREÇÃO: Adiciona coordenadas padrão para evitar erro se currentUser.latitude não existir.
+        const initialLat = currentUser?.latitude || -31.33; // Usa a latitude do usuário ou o padrão de Bagé
+        const initialLng = currentUser?.longitude || -54.10; // Usa a longitude do usuário ou o padrão de Bagé
+
+        fullMap = L.map('full-map-container').setView([initialLat, initialLng], 10);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(fullMap);
         hiveMarkersLayer = L.layerGroup().addTo(fullMap);
     }
@@ -256,7 +260,6 @@ function initializeFullMapView() {
     });
 }
 
-// NOVA FUNÇÃO para traduzir o código do tempo em texto e ícone
 function getWeatherDescription(code) {
     const weatherCodes = {
         0: { desc: "Céu limpo", icon: "fa-sun" },
@@ -278,7 +281,6 @@ function getWeatherDescription(code) {
     return weatherCodes[code] || { desc: "Não disponível", icon: "fa-question-circle" };
 }
 
-// NOVA FUNÇÃO para buscar o clima atual
 async function fetchCurrentWeather(hiveId, lat, lon) {
     const weatherElement = document.getElementById(`weather-info-${hiveId}`);
     if (!weatherElement) return;
