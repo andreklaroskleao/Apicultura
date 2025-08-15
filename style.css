@@ -620,7 +620,7 @@
   }
 
   /* --- ESTILOS DO MAPA --- */
-  #hive-map-container, #hive-detail-map, #full-map-container {
+  #hive-map-container, #hive-detail-map, #full-map-container, #edit-hive-map-container {
     width: 100%;
     border-radius: 0.375rem;
     border: 1px solid var(--color-border);
@@ -628,7 +628,7 @@
     z-index: 0; 
   }
 
-  #hive-map-container {
+  #hive-map-container, #edit-hive-map-container {
     height: 250px;
   }
   #hive-detail-map {
