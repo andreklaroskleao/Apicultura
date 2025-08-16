@@ -144,6 +144,49 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- LÓGICA DE LEITURA DE QR CODE ---
+    const scanQrBtn = document.getElementById('scan-qr-btn');
+    const qrReaderDiv = document.getElementById('qr-reader');
+    
+    if (scanQrBtn && qrReaderDiv && typeof Html5Qrcode !== 'undefined') {
+        const html5QrCode = new Html5Qrcode("qr-reader");
+
+        scanQrBtn.addEventListener('click', () => {
+            qrReaderDiv.style.display = 'block';
+            scanQrBtn.style.display = 'none';
+
+            const qrCodeSuccessCallback = (decodedText, decodedResult) => {
+                console.log(`QR Code lido com sucesso: ${decodedText}`);
+
+                const optionExists = Array.from(hiveSelect.options).some(opt => opt.value === decodedText);
+
+                if (optionExists) {
+                    hiveSelect.value = decodedText;
+                    alert(`Colmeia #${decodedText} selecionada!`);
+                    if (nextBtn) nextBtn.click(); 
+                } else {
+                    alert(`Erro: Colmeia com ID "${decodedText}" não encontrada.`);
+                }
+                
+                html5QrCode.stop().then(() => {
+                    qrReaderDiv.style.display = 'none';
+                    scanQrBtn.style.display = 'block';
+                }).catch(err => console.error("Falha ao parar o leitor de QR Code.", err));
+            };
+
+            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+            html5QrCode.start({ facingMode: "environment" }, config, qrCodeSuccessCallback)
+                .catch(err => {
+                    console.error("Não foi possível iniciar o leitor de QR Code", err);
+                    alert("Não foi possível acessar a câmera. Verifique as permissões do navegador.");
+                    qrReaderDiv.style.display = 'none';
+                    scanQrBtn.style.display = 'block';
+                });
+        });
+    }
+
+
     // --- LÓGICA DE TRANSCRIÇÃO DE VOZ ---
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const micButtons = document.querySelectorAll('.mic-btn-input');
@@ -171,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     recognition.start();
                 } catch(error) {
                     console.error("Erro ao tentar iniciar o reconhecimento de voz. Pode já estar ativo.", error);
-                    activeMicButton = null; // Reseta o botão ativo
+                    activeMicButton = null;
                 }
 
                 recognition.onstart = () => {
@@ -207,17 +250,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 const targetId = activeMicButton.dataset.target;
                 const targetInput = document.getElementById(targetId);
 
-                // Limpa a transcrição para números, removendo pontos e substituindo vírgulas
                 const cleanedTranscript = transcript.replace(/\./g, '').replace(/,/g, '.').trim();
 
                 if (targetInput.type === 'number') {
-                    // Tenta converter para número e preenche
                     const numericValue = parseFloat(cleanedTranscript);
                     if (!isNaN(numericValue)) {
                         targetInput.value = numericValue;
                     }
                 } else {
-                    // Para a textarea, concatena o texto
                     const textoAtual = targetInput.value;
                     targetInput.value = textoAtual ? `${textoAtual} ${transcript}` : transcript;
                 }
