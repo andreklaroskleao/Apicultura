@@ -183,3 +183,28 @@
     padding: 1rem 1.5rem;
     font-size: 1.1rem;
 }
+/* Estilo para a mensagem de sucesso do QR Code */
+.qr-success {
+    background-color: #dcfce7; /* Verde claro */
+    color: #166534; /* Verde escuro */
+    border: 1px solid #86efac;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+.qr-success.visible {
+    opacity: 1;
+}
+
+/* Garante que o botão Salvar se expanda corretamente */
+.navigation-buttons #save-btn {
+    flex-grow: 1;
+}
