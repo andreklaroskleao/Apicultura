@@ -3,10 +3,8 @@ import { db, currentUser, userHives } from './script.js';
 
 // --- REFERÊNCIAS AO DOM ---
 const monitoringHiveSelect = document.getElementById('monitoring-hive-select');
-const searchHiveBtn = document.getElementById('search-hive-btn');
 const panoramaContainer = document.getElementById('panorama-container');
 const panoramaTitle = document.getElementById('panorama-title');
-const printPanoramaBtn = document.getElementById('print-panorama-btn');
 // Cards de Resumo
 const summaryTotalCollections = document.getElementById('summary-total-collections');
 const summaryAvgWeight = document.getElementById('summary-avg-weight');
@@ -15,8 +13,6 @@ const summaryLastCollection = document.getElementById('summary-last-collection')
 const colonyWeightChartCanvas = document.getElementById('colony-weight-chart');
 let colonyWeightChart = null;
 // Formulários de Monitoramento
-const notesForm = document.getElementById('notes-form');
-const healthForm = document.getElementById('health-form');
 const extraNotesTextarea = document.getElementById('extra-notes');
 const pestPresenceInput = document.getElementById('pest-presence');
 const queenReplacementInput = document.getElementById('queen-replacement');
@@ -52,16 +48,6 @@ const populateHiveFilter = () => {
         monitoringHiveSelect.appendChild(option);
     });
 };
-
-// Adiciona o listener ao botão de busca
-searchHiveBtn.addEventListener('click', () => {
-    const selectedHiveId = monitoringHiveSelect.value;
-    if (selectedHiveId) {
-        fetchAndDisplayPanorama(selectedHiveId);
-    } else {
-        alert("Por favor, selecione uma colmeia.");
-    }
-});
 
 /**
  * Busca os dados climáticos para um intervalo de datas usando a API Open-Meteo.
@@ -225,11 +211,38 @@ const saveMonitoringData = async (e) => {
     }
 };
 
-// Listeners para os formulários
-notesForm.addEventListener('submit', saveMonitoringData);
-healthForm.addEventListener('submit', saveMonitoringData);
 
-// Listener para o botão de imprimir
-printPanoramaBtn.addEventListener('click', () => {
-    window.print();
+// --- LISTENERS DE EVENTOS (AGORA DENTRO DO DOMCONTENTLOADED) ---
+document.addEventListener('DOMContentLoaded', () => {
+    const searchHiveBtn = document.getElementById('search-hive-btn');
+    const notesForm = document.getElementById('notes-form');
+    const healthForm = document.getElementById('health-form');
+    const printPanoramaBtn = document.getElementById('print-panorama-btn');
+    
+    // Adiciona o listener ao botão de busca
+    if (searchHiveBtn) {
+        searchHiveBtn.addEventListener('click', () => {
+            const selectedHiveId = monitoringHiveSelect.value;
+            if (selectedHiveId) {
+                fetchAndDisplayPanorama(selectedHiveId);
+            } else {
+                alert("Por favor, selecione uma colmeia.");
+            }
+        });
+    }
+
+    // Listeners para os formulários
+    if (notesForm) {
+        notesForm.addEventListener('submit', saveMonitoringData);
+    }
+    if (healthForm) {
+        healthForm.addEventListener('submit', saveMonitoringData);
+    }
+
+    // Listener para o botão de imprimir
+    if (printPanoramaBtn) {
+        printPanoramaBtn.addEventListener('click', () => {
+            window.print();
+        });
+    }
 });
