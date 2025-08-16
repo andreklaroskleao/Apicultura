@@ -1,14 +1,12 @@
 import { collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { db, currentUser, userHives } from './script.js';
 
-// --- REFERÊNCIAS AO DOM ---
-const reportFiltersForm = document.getElementById('report-filters-form');
+// --- REFERÊNCIAS AO DOM (Estas podem ficar aqui) ---
 const reportHiveSelect = document.getElementById('report-hive-select');
 const reportResultsContainer = document.getElementById('report-results-container');
 const reportSummary = document.getElementById('report-summary');
 const reportTableBody = document.getElementById('report-table-body');
 const reportTitle = document.getElementById('report-title');
-
 
 // --- LÓGICA DE RELATÓRIOS ---
 
@@ -37,12 +35,6 @@ const populateHiveFilter = () => {
         reportHiveSelect.appendChild(option);
     });
 };
-
-// Listener do formulário de filtros
-reportFiltersForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    generateReport();
-});
 
 /**
  * Constrói e executa uma consulta ao Firestore com base nos filtros selecionados
@@ -133,9 +125,21 @@ const displayReport = (collections, hive, start, end) => {
     reportResultsContainer.classList.remove('hidden');
 };
 
-// Listener para o botão de imprimir
+// --- LISTENERS DE EVENTOS (AGORA DENTRO DO DOMCONTENTLOADED) ---
 document.addEventListener('DOMContentLoaded', () => {
+    // Pega as referências aos elementos aqui dentro para garantir que eles existem
+    const reportFiltersForm = document.getElementById('report-filters-form');
     const printReportBtn = document.getElementById('print-report-btn');
+
+    // Listener do formulário de filtros
+    if (reportFiltersForm) {
+        reportFiltersForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            generateReport();
+        });
+    }
+
+    // Listener para o botão de imprimir
     if (printReportBtn) {
         printReportBtn.addEventListener('click', () => {
             window.print();
