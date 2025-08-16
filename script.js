@@ -696,6 +696,71 @@ async function showHiveDetails(hiveId) {
 
 
     viewModalBody.innerHTML = `
+        <div id="hive-details-printable-area">
+            <div class="flex justify-between items-start">
+                <div class="space-y-2 mb-4">
+                    <p><strong>Tipo de Caixa:</strong> ${hive.boxType || 'Não informado'}</p>
+                    <p><strong>Rainha:</strong> ${hive.queen || 'Não informado'}</p>
+                    <p><strong>Ano de Instalação:</strong> ${hive.installationYear || 'Não informado'}</p>
+                    ${weatherHtml}
+                </div>
+                
+                <div class="text-center">
+                    <div id="qrcode-container" class="p-2 bg-white inline-block"></div>
+                    <p class="text-xs font-bold mt-1">Colmeia #${hive.id}</p>
+                </div>
+            </div>
+        </div>
+
+        <button id="print-qr-btn" class="button-secondary w-full mt-4"><i class="fa-solid fa-print mr-2"></i>Imprimir Etiqueta</button>
+        
+        ${mapHtml}
+        <hr class="my-4">
+        <h4 class="font-semibold">Gestão de Acesso</h4>
+        <p class="text-sm text-gray-500 mb-2">Aqui você pode gerenciar quem tem acesso aos dados desta colmeia.</p>
+        ${sharedWithHtml}
+    `;
+    viewDetailsModal.classList.add('is-open');
+
+    // --- LÓGICA PARA GERAR O QR CODE (NOVO) ---
+    const qrcodeContainer = document.getElementById('qrcode-container');
+    qrcodeContainer.innerHTML = ''; // Limpa o QR Code anterior
+    new QRCode(qrcodeContainer, {
+        text: hive.id,
+        width: 120,
+        height: 120,
+        colorDark : "#000000",
+        colorLight : "#ffffff",
+        correctLevel : QRCode.CorrectLevel.H
+    });
+
+    // --- LÓGICA PARA IMPRIMIR O QR CODE (NOVO) ---
+    const printQrBtn = document.getElementById('print-qr-btn');
+    printQrBtn.addEventListener('click', () => {
+        const printableArea = document.getElementById('hive-details-printable-area').innerHTML;
+        const originalPage = document.body.innerHTML;
+        
+        document.body.innerHTML = `<div style="display:flex; justify-content:center; align-items:center; height:100vh;">${printableArea}</div>`;
+        window.print();
+        document.body.innerHTML = originalPage;
+        // Recarrega os listeners, pois a página foi reescrita
+        location.reload(); 
+    });
+
+
+    if (hive.latitude) {
+        setTimeout(() => {
+            displayDetailMap(hive.id, hive.latitude, hive.longitude);
+            fetchCurrentWeather(hive.id, hive.latitude, hive.longitude);
+        }, 100);
+    }
+}
+    
+    const mapHtml = hive.latitude ? `<div id="hive-detail-map-${hive.id}" style="height: 200px; margin-top: 1rem;"></div>` : '<p class="text-sm text-gray-500 mt-2">Localização não registrada.</p>';
+    const weatherHtml = hive.latitude ? `<p><strong>Clima Atual:</strong> <span id="weather-info-${hive.id}">A carregar... <i class="fa-solid fa-spinner fa-spin"></i></span></p>` : '';
+
+
+    viewModalBody.innerHTML = `
         <div class="flex justify-between items-start">
             <div class="space-y-2 mb-4">
                 <p><strong>Tipo de Caixa:</strong> ${hive.boxType || 'Não informado'}</p>
@@ -1303,3 +1368,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     })();
 });
+
