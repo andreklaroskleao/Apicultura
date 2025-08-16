@@ -18,9 +18,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const totalSteps = formSteps.length;
     let collectionData = {}; // Objeto para armazenar os dados
 
-    // --- INICIALIZAÇÃO ---
+    // --- LÓGICA DE NAVEGAÇÃO (sem alterações) ---
+    const populateHiveSelect = () => { /* ...código original... */ };
+    const setCurrentDate = () => { /* ...código original... */ };
+    const updateFormStep = () => { /* ...código original... */ };
+    const updateProgressBar = () => { /* ...código original... */ };
+    const updateNavigationButtons = () => { /* ...código original... */ };
+    const validateStep = () => { /* ...código original... */ };
+    const storeStepData = () => { /* ...código original... */ };
     
-    // Popula o seletor de colmeias
+    // (As funções acima permanecem exatamente as mesmas da versão anterior)
     const populateHiveSelect = () => {
         if (!hiveSelect) return;
         if (userHives.length === 0) {
@@ -33,8 +40,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
         hiveSelect.innerHTML = `<option value="">Selecione...</option>${optionsHtml}`;
     };
-
-    // Preenche a data atual
     const setCurrentDate = () => {
         if (!dateInput) return;
         const today = new Date();
@@ -43,9 +48,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const day = String(today.getDate()).padStart(2, '0');
         dateInput.value = `${year}-${month}-${day}`;
     };
-    
-    // --- LÓGICA DE NAVEGAÇÃO ---
-    
     const updateFormStep = () => {
         formSteps.forEach((step, index) => {
             step.classList.toggle('active', index === currentStep);
@@ -53,20 +55,17 @@ document.addEventListener('DOMContentLoaded', () => {
         updateProgressBar();
         updateNavigationButtons();
     };
-
     const updateProgressBar = () => {
         if (!progressBar) return;
         const progress = (currentStep / (totalSteps - 1)) * 100;
         progressBar.style.width = `${progress}%`;
     };
-
     const updateNavigationButtons = () => {
         if (!prevBtn || !nextBtn || !saveBtn) return;
         prevBtn.classList.toggle('hidden', currentStep === 0);
         nextBtn.classList.toggle('hidden', currentStep === totalSteps - 1);
         saveBtn.classList.toggle('hidden', currentStep !== totalSteps - 1);
     };
-
     const validateStep = () => {
         const currentInput = formSteps[currentStep].querySelector('input, select, textarea');
         if (currentInput && currentInput.required && !currentInput.value) {
@@ -75,13 +74,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         return true;
     };
-    
     const storeStepData = () => {
         const currentInput = formSteps[currentStep].querySelector('input, select, textarea');
         if (currentInput) {
             collectionData[currentInput.id] = currentInput.value;
         }
     };
+
 
     if (nextBtn) {
         nextBtn.addEventListener('click', () => {
@@ -104,23 +103,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- LÓGICA DE SALVAMENTO ---
+    // --- LÓGICA DE SALVAMENTO (sem alterações) ---
     if (saveBtn) {
         saveBtn.addEventListener('click', async () => {
+            // ... (código original de salvamento permanece o mesmo)
             if (!currentUser) {
                 alert("Erro: Usuário não autenticado.");
                 return;
             }
-
             const hiveId = collectionData['hive-id-select'];
             const hive = userHives.find(h => h.id === hiveId);
-
             if (!hive) {
                 alert("Erro: Colmeia selecionada é inválida.");
                 return;
             }
-
-            // Monta o objeto final para salvar no Firestore
             const dataToSave = {
                 hiveId: hiveId,
                 data: collectionData['data'],
@@ -137,16 +133,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 pesoQuadrosMelgueira: parseFloat(collectionData['pesoQuadrosMelgueira']),
                 observacoes: collectionData['observacoes'],
             };
-
             try {
                 saveBtn.disabled = true;
                 saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Salvando...';
-                
                 await addDoc(collection(db, "collections"), dataToSave);
-                
                 alert("Coleta salva com sucesso!");
-                window.location.href = '/index.html'; // Redireciona para a página principal
-
+                window.location.href = '/index.html';
             } catch (error) {
                 console.error("Erro ao salvar dados da coleta:", error);
                 alert("Falha ao salvar os dados. Tente novamente.");
@@ -156,73 +148,89 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- LÓGICA DE TRANSCRIÇÃO DE VOZ ---
-    const micBtn = document.getElementById('mic-btn');
-    const observacoesTextarea = document.getElementById('observacoes');
-    const micStatus = document.getElementById('mic-status');
-
-    // Verifica se o navegador suporta a Web Speech API
+    // --- LÓGICA DE TRANSCRIÇÃO DE VOZ (ATUALIZADA E GENERALIZADA) ---
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    
-    if (SpeechRecognition && micBtn && observacoesTextarea && micStatus) {
-        const recognition = new SpeechRecognition();
-        
-        // Configurações do reconhecimento
-        recognition.lang = 'pt-BR'; // Define o idioma para Português do Brasil
-        recognition.continuous = false; // Para de ouvir após uma pausa na fala
-        recognition.interimResults = false; // Retorna apenas o resultado final
+    const micButtons = document.querySelectorAll('.mic-btn-input');
 
-        micBtn.addEventListener('click', () => {
-            if (micBtn.classList.contains('listening')) {
-                recognition.stop();
-            } else {
-                try {
-                    recognition.start();
-                } catch (error) {
-                    console.error("Erro ao iniciar o reconhecimento de voz:", error);
-                    micStatus.textContent = 'Não foi possível iniciar a gravação.';
+    if (SpeechRecognition && micButtons.length > 0) {
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'pt-BR';
+        recognition.continuous = false;
+        recognition.interimResults = false;
+
+        let activeMicButton = null;
+
+        micButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const targetId = button.dataset.target;
+                const targetInput = document.getElementById(targetId);
+                const statusElement = document.querySelector(`.mic-status-text[data-status-for="${targetId}"]`);
+                
+                if (activeMicButton) {
+                    recognition.stop();
+                    return;
                 }
-            }
+
+                activeMicButton = button;
+                recognition.start();
+
+                recognition.onstart = () => {
+                    button.classList.add('listening');
+                    if(statusElement) statusElement.textContent = 'Ouvindo...';
+                };
+            });
         });
 
-        // Evento: quando o reconhecimento começa
-        recognition.onstart = () => {
-            micBtn.classList.add('listening');
-            micStatus.textContent = 'Ouvindo...';
-        };
-
-        // Evento: quando o reconhecimento termina
         recognition.onend = () => {
-            micBtn.classList.remove('listening');
-            micStatus.textContent = '';
+            if (activeMicButton) {
+                const targetId = activeMicButton.dataset.target;
+                const statusElement = document.querySelector(`.mic-status-text[data-status-for="${targetId}"]`);
+                activeMicButton.classList.remove('listening');
+                if(statusElement) statusElement.textContent = '';
+                activeMicButton = null;
+            }
         };
 
-        // Evento: em caso de erro
         recognition.onerror = (event) => {
             console.error("Erro no reconhecimento de voz:", event.error);
-            micStatus.textContent = 'Erro ao ouvir. Tente novamente.';
+            if (activeMicButton) {
+                const targetId = activeMicButton.dataset.target;
+                const statusElement = document.querySelector(`.mic-status-text[data-status-for="${targetId}"]`);
+                if(statusElement) statusElement.textContent = 'Erro ao ouvir.';
+            }
         };
-
-        // Evento: QUANDO O RESULTADO É OBTIDO
+        
         recognition.onresult = (event) => {
             const transcript = event.results[0][0].transcript;
             
-            // Adiciona o texto transcrito ao campo, mantendo o que já estava lá
-            const textoAtual = observacoesTextarea.value;
-            observacoesTextarea.value = textoAtual ? `${textoAtual} ${transcript}` : transcript;
+            if (activeMicButton) {
+                const targetId = activeMicButton.dataset.target;
+                const targetInput = document.getElementById(targetId);
+
+                // Limpa a transcrição para números, removendo pontos e substituindo vírgulas
+                const cleanedTranscript = transcript.replace(/\./g, '').replace(/,/g, '.').trim();
+
+                if (targetInput.type === 'number') {
+                    // Tenta converter para número e preenche
+                    const numericValue = parseFloat(cleanedTranscript);
+                    if (!isNaN(numericValue)) {
+                        targetInput.value = numericValue;
+                    }
+                } else {
+                    // Para a textarea, concatena o texto
+                    const textoAtual = targetInput.value;
+                    targetInput.value = textoAtual ? `${textoAtual} ${transcript}` : transcript;
+                }
+            }
         };
 
     } else {
-        // Se o navegador não suportar a API, esconde o botão
-        if (micBtn) {
-            micBtn.style.display = 'none';
-            console.warn("Seu navegador não suporta a transcrição de voz.");
-        }
+        micButtons.forEach(button => button.style.display = 'none');
+        console.warn("Seu navegador não suporta a transcrição de voz.");
     }
 
-    // Função de inicialização da página
+    // --- INICIALIZAÇÃO DA PÁGINA ---
     const initializePage = () => {
-        // Aguarda um instante para garantir que `userHives` de `script.js` foi carregado
         setTimeout(() => {
             populateHiveSelect();
             setCurrentDate();
