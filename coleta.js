@@ -13,10 +13,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const progressBar = document.getElementById('coleta-progress');
     const hiveSelect = document.getElementById('hive-id-select');
     const dateInput = document.getElementById('data');
+    const todayBtn = document.getElementById('today-btn'); // Botão "Hoje"
 
     let currentStep = 0;
     const totalSteps = formSteps.length;
-    let collectionData = {}; // Objeto para armazenar os dados
+    let collectionData = {}; 
 
     // --- LÓGICA DE NAVEGAÇÃO ---
     const populateHiveSelect = () => {
@@ -78,7 +79,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-
+    if (todayBtn) {
+        todayBtn.addEventListener('click', setCurrentDate);
+    }
+    
     if (nextBtn) {
         nextBtn.addEventListener('click', () => {
             if (validateStep()) {
@@ -100,7 +104,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- LÓGICA DE SALVAMENTO ---
     if (saveBtn) {
         saveBtn.addEventListener('click', async () => {
             if (!currentUser) {
@@ -146,20 +149,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- LÓGICA DE LEITURA DE QR CODE ---
     const scanQrBtn = document.getElementById('scan-qr-btn');
+    const cancelScanBtn = document.getElementById('cancel-scan-btn');
     const qrReaderDiv = document.getElementById('qr-reader');
     
     if (scanQrBtn && qrReaderDiv && typeof Html5Qrcode !== 'undefined') {
         const html5QrCode = new Html5Qrcode("qr-reader");
 
+        const stopScanner = () => {
+            html5QrCode.stop().then(() => {
+                qrReaderDiv.style.display = 'none';
+                scanQrBtn.style.display = 'block';
+                if(cancelScanBtn) cancelScanBtn.classList.add('hidden');
+            }).catch(err => {
+                console.error("Falha ao parar o leitor de QR Code.", err);
+                // Mesmo com erro, garante que a interface seja restaurada
+                qrReaderDiv.style.display = 'none';
+                scanQrBtn.style.display = 'block';
+                if(cancelScanBtn) cancelScanBtn.classList.add('hidden');
+            });
+        };
+
         scanQrBtn.addEventListener('click', () => {
             qrReaderDiv.style.display = 'block';
             scanQrBtn.style.display = 'none';
+            cancelScanBtn.classList.remove('hidden');
 
             const qrCodeSuccessCallback = (decodedText, decodedResult) => {
-                console.log(`QR Code lido com sucesso: ${decodedText}`);
-
                 const optionExists = Array.from(hiveSelect.options).some(opt => opt.value === decodedText);
-
                 if (optionExists) {
                     hiveSelect.value = decodedText;
                     alert(`Colmeia #${decodedText} selecionada!`);
@@ -167,26 +183,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     alert(`Erro: Colmeia com ID "${decodedText}" não encontrada.`);
                 }
-                
-                html5QrCode.stop().then(() => {
-                    qrReaderDiv.style.display = 'none';
-                    scanQrBtn.style.display = 'block';
-                }).catch(err => console.error("Falha ao parar o leitor de QR Code.", err));
+                stopScanner();
             };
 
             const config = { fps: 10, qrbox: { width: 250, height: 250 } };
 
             html5QrCode.start({ facingMode: "environment" }, config, qrCodeSuccessCallback)
                 .catch(err => {
-                    console.error("Não foi possível iniciar o leitor de QR Code", err);
                     alert("Não foi possível acessar a câmera. Verifique as permissões do navegador.");
-                    qrReaderDiv.style.display = 'none';
-                    scanQrBtn.style.display = 'block';
+                    stopScanner();
                 });
         });
+
+        if (cancelScanBtn) {
+            cancelScanBtn.addEventListener('click', stopScanner);
+        }
     }
-
-
+    
     // --- LÓGICA DE TRANSCRIÇÃO DE VOZ ---
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const micButtons = document.querySelectorAll('.mic-btn-input');
@@ -196,19 +209,16 @@ document.addEventListener('DOMContentLoaded', () => {
         recognition.lang = 'pt-BR';
         recognition.continuous = false;
         recognition.interimResults = false;
-
         let activeMicButton = null;
 
         micButtons.forEach(button => {
             button.addEventListener('click', () => {
                 const targetId = button.dataset.target;
                 const statusElement = document.querySelector(`.mic-status-text[data-status-for="${targetId}"]`);
-                
                 if (activeMicButton) {
                     recognition.stop();
                     return;
                 }
-
                 activeMicButton = button;
                 try {
                     recognition.start();
@@ -216,7 +226,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.error("Erro ao tentar iniciar o reconhecimento de voz. Pode já estar ativo.", error);
                     activeMicButton = null;
                 }
-
                 recognition.onstart = () => {
                     button.classList.add('listening');
                     if(statusElement) statusElement.textContent = 'Ouvindo...';
@@ -242,16 +251,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 if(statusElement) statusElement.textContent = 'Erro ao ouvir.';
             }
         };
-        
+
         recognition.onresult = (event) => {
             const transcript = event.results[0][0].transcript;
-            
             if (activeMicButton) {
                 const targetId = activeMicButton.dataset.target;
                 const targetInput = document.getElementById(targetId);
-
                 const cleanedTranscript = transcript.replace(/\./g, '').replace(/,/g, '.').trim();
-
                 if (targetInput.type === 'number') {
                     const numericValue = parseFloat(cleanedTranscript);
                     if (!isNaN(numericValue)) {
@@ -263,7 +269,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         };
-
     } else {
         micButtons.forEach(button => button.style.display = 'none');
         console.warn("Seu navegador não suporta a transcrição de voz.");
