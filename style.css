@@ -705,3 +705,15 @@
       display: none;
     }
   }
+  /* Ajusta o conteúdo do modal para não estourar a tela */
+  .modal-content {
+      max-height: 90vh; /* O modal nunca será mais alto que 90% da altura da tela */
+      display: flex;
+      flex-direction: column;
+  }
+  
+  /* Faz com que apenas o corpo do modal tenha rolagem */
+  .modal-body {
+      overflow-y: auto; /* Adiciona uma barra de rolagem vertical SE necessário */
+      padding-right: 1rem; /* Espaço para a barra de rolagem */
+  }
