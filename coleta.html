@@ -39,16 +39,21 @@
                         <label for="hive-id-select" class="form-label-coleta">Qual colmeia você está visitando?</label>
                         <select id="hive-id-select" required class="form-input-coleta"></select>
                         
+                        <div id="qr-reader" class="mt-4" style="width: 100%; display: none;"></div>
+                        
                         <button type="button" id="scan-qr-btn" class="button-primary w-full mt-4">
                             <i class="fa-solid fa-qrcode mr-2"></i>Escanear QR Code
                         </button>
-                        <div id="qr-reader" class="mt-4" style="width: 100%; display: none;"></div>
+                        <button type="button" id="cancel-scan-btn" class="button-danger w-full mt-4 hidden">
+                            <i class="fa-solid fa-times mr-2"></i>Cancelar Leitura
+                        </button>
                     </div>
 
                     <div class="form-step">
                         <label for="data" class="form-label-coleta">Qual a data da coleta?</label>
-                        <div class="input-with-mic">
+                        <div class="date-container">
                             <input type="date" id="data" required class="form-input-coleta">
+                            <button type="button" id="today-btn" class="button-secondary">Hoje</button>
                         </div>
                     </div>
 
