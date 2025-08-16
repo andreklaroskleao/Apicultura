@@ -71,18 +71,20 @@ const listenToSales = () => {
     const salesCollection = collection(db, `users/${currentUser.uid}/sales`);
     unsubscribeSales = onSnapshot(salesCollection, (snapshot) => {
         allSales = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        salesTableBody.innerHTML = '';
-        allSales.forEach(sale => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${sale.date}</td>
-                <td>${sale.volume} kg</td>
-                <td>R$ ${sale.pricePerKg.toFixed(2)}</td>
-                <td>R$ ${sale.total.toFixed(2)}</td>
-                <td><button class="delete-sale-btn button-danger text-xs" data-id="${sale.id}"><i class="fa-solid fa-trash"></i></button></td>
-            `;
-            salesTableBody.appendChild(tr);
-        });
+        if (salesTableBody) {
+            salesTableBody.innerHTML = '';
+            allSales.forEach(sale => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${sale.date}</td>
+                    <td>${sale.volume} kg</td>
+                    <td>R$ ${sale.pricePerKg.toFixed(2)}</td>
+                    <td>R$ ${sale.total.toFixed(2)}</td>
+                    <td><button class="delete-sale-btn button-danger text-xs" data-id="${sale.id}"><i class="fa-solid fa-trash"></i></button></td>
+                `;
+                salesTableBody.appendChild(tr);
+            });
+        }
         calculateFinancialSummary();
     });
 };
@@ -92,17 +94,19 @@ const listenToCosts = () => {
     const costsCollection = collection(db, `users/${currentUser.uid}/costs`);
     unsubscribeCosts = onSnapshot(costsCollection, (snapshot) => {
         allCosts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        costsTableBody.innerHTML = '';
-        allCosts.forEach(cost => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${cost.date}</td>
-                <td>${cost.description}</td>
-                <td>R$ ${cost.value.toFixed(2)}</td>
-                <td><button class="delete-cost-btn button-danger text-xs" data-id="${cost.id}"><i class="fa-solid fa-trash"></i></button></td>
-            `;
-            costsTableBody.appendChild(tr);
-        });
+        if (costsTableBody) {
+            costsTableBody.innerHTML = '';
+            allCosts.forEach(cost => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${cost.date}</td>
+                    <td>${cost.description}</td>
+                    <td>R$ ${cost.value.toFixed(2)}</td>
+                    <td><button class="delete-cost-btn button-danger text-xs" data-id="${cost.id}"><i class="fa-solid fa-trash"></i></button></td>
+                `;
+                costsTableBody.appendChild(tr);
+            });
+        }
         calculateFinancialSummary();
     });
 };
@@ -112,20 +116,21 @@ const listenToExtractions = () => {
     const extractionsCollection = collection(db, `users/${currentUser.uid}/extractions`);
     unsubscribeExtractions = onSnapshot(extractionsCollection, (snapshot) => {
         allExtractions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        extractionTableBody.innerHTML = '';
-        allExtractions.forEach(data => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${data.date}</td>
-                <td>${data.volume.toFixed(1)}</td>
-                <td>${data.destination}</td>
-                <td>
-                    <button class="delete-extraction-btn button-danger text-xs" data-id="${data.id}"><i class="fa-solid fa-trash"></i></button>
-                </td>
-            `;
-            extractionTableBody.appendChild(tr);
-        });
-        // Recalcula o sumário financeiro caso a extração influencie o stock para venda
+        if (extractionTableBody) {
+            extractionTableBody.innerHTML = '';
+            allExtractions.forEach(data => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${data.date}</td>
+                    <td>${data.volume.toFixed(1)}</td>
+                    <td>${data.destination}</td>
+                    <td>
+                        <button class="delete-extraction-btn button-danger text-xs" data-id="${data.id}"><i class="fa-solid fa-trash"></i></button>
+                    </td>
+                `;
+                extractionTableBody.appendChild(tr);
+            });
+        }
         calculateFinancialSummary();
     });
 };
@@ -140,21 +145,23 @@ const listenToInventory = () => {
 };
 
 const renderInventory = () => {
-    inventoryList.innerHTML = '';
-    Object.entries(defaultItems).forEach(([key, name]) => {
-        const quantity = currentInventory[key] || 0;
-        const itemEl = document.createElement('div');
-        itemEl.className = 'inventory-item';
-        itemEl.innerHTML = `
-            <span class="inventory-item-name">${name}</span>
-            <div class="inventory-controls">
-                <button class="stock-change-btn" data-item="${key}" data-action="remove">-</button>
-                <span class="stock-quantity">${quantity}</span>
-                <button class="stock-change-btn" data-item="${key}" data-action="add">+</button>
-            </div>
-        `;
-        inventoryList.appendChild(itemEl);
-    });
+    if (inventoryList) {
+        inventoryList.innerHTML = '';
+        Object.entries(defaultItems).forEach(([key, name]) => {
+            const quantity = currentInventory[key] || 0;
+            const itemEl = document.createElement('div');
+            itemEl.className = 'inventory-item';
+            itemEl.innerHTML = `
+                <span class="inventory-item-name">${name}</span>
+                <div class="inventory-controls">
+                    <button class="stock-change-btn" data-item="${key}" data-action="remove">-</button>
+                    <span class="stock-quantity">${quantity}</span>
+                    <button class="stock-change-btn" data-item="${key}" data-action="add">+</button>
+                </div>
+            `;
+            inventoryList.appendChild(itemEl);
+        });
+    }
 };
 
 const openStockModal = (item, action) => {
@@ -295,7 +302,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const inventoryRef = doc(db, `users/${currentUser.uid}/inventory`, 'stock');
                 await setDoc(inventoryRef, { [item]: newQuantity }, { merge: true });
                 stockModal.classList.remove('is-open');
-            } catch (error)
+            } catch (error) { // <-- BRACES WERE MISSING HERE
                 console.error("Erro ao atualizar o estoque:", error);
                 alert("Falha ao atualizar o estoque.");
             }
