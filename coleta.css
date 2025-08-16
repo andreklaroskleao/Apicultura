@@ -167,3 +167,19 @@
 #prev-btn.hidden {
     visibility: hidden;
 }
+
+.date-container {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem; /* Espaçamento entre o campo e o botão */
+}
+
+.date-container .form-input-coleta {
+    flex-grow: 1; /* Faz o campo de data ocupar o espaço disponível */
+}
+
+#today-btn {
+    flex-shrink: 0; /* Impede que o botão "Hoje" seja esmagado */
+    padding: 1rem 1.5rem;
+    font-size: 1.1rem;
+}
