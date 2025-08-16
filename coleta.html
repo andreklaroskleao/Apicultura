@@ -1,96 +1,150 @@
-<form id="coleta-form">
-    <div class="form-step active">
-        <label for="hive-id-select" class="form-label-coleta">Qual colmeia você está visitando?</label>
-        <select id="hive-id-select" required class="form-input-coleta"></select>
-        </div>
-
-    <div class="form-step">
-        <label for="data" class="form-label-coleta">Qual a data da coleta?</label>
-        <div class="input-with-mic">
-            <input type="date" id="data" required class="form-input-coleta">
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BeeControl - Nova Coleta</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#f59e0b"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="coleta.css">
+</head>
+<body>
+    <div id="main-container" class="coleta-container">
+        <header class="app-header">
+            <div class="logo">
+                <i class="fa-solid fa-shield-halved"></i>
+                <h1>BeeControl</h1>
             </div>
+            <a href="/index.html" class="button-secondary">
+                <i class="fa-solid fa-arrow-left mr-2"></i>Voltar ao Painel
+            </a>
+        </header>
+
+        <main class="coleta-main">
+            <div id="coleta-wizard-card" class="auth-card">
+                <div id="coleta-progress-bar">
+                    <div id="coleta-progress"></div>
+                </div>
+
+                <form id="coleta-form">
+                    <div class="form-step active">
+                        <label for="hive-id-select" class="form-label-coleta">Qual colmeia você está visitando?</label>
+                        <select id="hive-id-select" required class="form-input-coleta"></select>
+                    </div>
+
+                    <div class="form-step">
+                        <label for="data" class="form-label-coleta">Qual a data da coleta?</label>
+                        <div class="input-with-mic">
+                            <input type="date" id="data" required class="form-input-coleta">
+                        </div>
+                    </div>
+
+                    <div class="form-step">
+                        <label for="numeroColeta" class="form-label-coleta">Qual o número desta coleta?</label>
+                        <div class="input-with-mic">
+                            <input type="number" id="numeroColeta" required class="form-input-coleta" placeholder="Ex: 1" inputmode="numeric">
+                            <button type="button" class="mic-btn-input" data-target="numeroColeta" title="Falar o número da coleta">
+                                <i class="fa-solid fa-microphone"></i>
+                            </button>
+                        </div>
+                        <p class="mic-status-text" data-status-for="numeroColeta"></p>
+                    </div>
+
+                    <div class="form-step">
+                        <label for="numeroMelgueiras" class="form-label-coleta">Quantas melgueiras foram coletadas?</label>
+                        <div class="input-with-mic">
+                            <input type="number" id="numeroMelgueiras" required class="form-input-coleta" value="1" inputmode="numeric">
+                            <button type="button" class="mic-btn-input" data-target="numeroMelgueiras" title="Falar o número de melgueiras">
+                                <i class="fa-solid fa-microphone"></i>
+                            </button>
+                        </div>
+                        <p class="mic-status-text" data-status-for="numeroMelgueiras"></p>
+                    </div>
+
+                    <div class="form-step">
+                        <label for="pesoNinhoVazio" class="form-label-coleta">Peso do Ninho Vazio (kg)</label>
+                        <div class="input-with-mic">
+                            <input type="number" step="0.01" id="pesoNinhoVazio" required class="form-input-coleta" placeholder="Ex: 2,5" inputmode="decimal">
+                            <button type="button" class="mic-btn-input" data-target="pesoNinhoVazio" title="Falar o peso do ninho vazio">
+                                <i class="fa-solid fa-microphone"></i>
+                            </button>
+                        </div>
+                        <p class="mic-status-text" data-status-for="pesoNinhoVazio"></p>
+                    </div>
+
+                    <div class="form-step">
+                        <label for="pesoQuadrosOperculos" class="form-label-coleta">Peso dos Quadros + Opérculos (kg)</label>
+                        <div class="input-with-mic">
+                            <input type="number" step="0.01" id="pesoQuadrosOperculos" required class="form-input-coleta" placeholder="Ex: 1,8" inputmode="decimal">
+                            <button type="button" class="mic-btn-input" data-target="pesoQuadrosOperculos" title="Falar o peso dos quadros">
+                                <i class="fa-solid fa-microphone"></i>
+                            </button>
+                        </div>
+                        <p class="mic-status-text" data-status-for="pesoQuadrosOperculos"></p>
+                    </div>
+
+                    <div class="form-step">
+                        <label for="pesoMelgueiraVazia" class="form-label-coleta">Peso da Melgueira Vazia (kg)</label>
+                        <div class="input-with-mic">
+                            <input type="number" step="0.01" id="pesoMelgueiraVazia" required class="form-input-coleta" placeholder="Ex: 1,5" inputmode="decimal">
+                            <button type="button" class="mic-btn-input" data-target="pesoMelgueiraVazia" title="Falar o peso da melgueira vazia">
+                                <i class="fa-solid fa-microphone"></i>
+                            </button>
+                        </div>
+                        <p class="mic-status-text" data-status-for="pesoMelgueiraVazia"></p>
+                    </div>
+
+                    <div class="form-step">
+                        <label for="pesoQuadrosMelgueira" class="form-label-coleta">Peso dos Quadros da Melgueira (kg)</label>
+                        <div class="input-with-mic">
+                            <input type="number" step="0.01" id="pesoQuadrosMelgueira" required class="form-input-coleta" placeholder="Ex: 3,2" inputmode="decimal">
+                            <button type="button" class="mic-btn-input" data-target="pesoQuadrosMelgueira" title="Falar o peso dos quadros da melgueira">
+                                <i class="fa-solid fa-microphone"></i>
+                            </button>
+                        </div>
+                        <p class="mic-status-text" data-status-for="pesoQuadrosMelgueira"></p>
+                    </div>
+
+                    <div class="form-step">
+                        <label for="observacoes" class="form-label-coleta">Alguma observação importante?</label>
+                        <div class="input-with-mic">
+                            <textarea id="observacoes" rows="4" class="form-input-coleta"></textarea>
+                            <button type="button" class="mic-btn-input" data-target="observacoes" title="Gravar observação por voz">
+                                <i class="fa-solid fa-microphone"></i>
+                            </button>
+                        </div>
+                        <p class="mic-status-text" data-status-for="observacoes"></p>
+                    </div>
+
+                     <div class="form-step final-step">
+                        <h2 class="form-label-coleta">Tudo pronto!</h2>
+                        <p class="final-step-message">Revise os dados se necessário ou clique em salvar para finalizar.</p>
+                        <i class="fa-solid fa-check-circle final-step-icon"></i>
+                    </div>
+                </form>
+
+                <div class="navigation-buttons">
+                    <button id="prev-btn" class="button-secondary">
+                        <i class="fa-solid fa-chevron-left"></i> Anterior
+                    </button>
+                    <button id="next-btn" class="button-primary">
+                        Próximo <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                    <button id="save-btn" class="button-success hidden">
+                        <i class="fa-solid fa-save"></i> Salvar Coleta
+                    </button>
+                </div>
+            </div>
+        </main>
     </div>
 
-    <div class="form-step">
-        <label for="numeroColeta" class="form-label-coleta">Qual o número desta coleta?</label>
-        <div class="input-with-mic">
-            <input type="number" id="numeroColeta" required class="form-input-coleta" placeholder="Ex: 1" inputmode="numeric">
-            <button type="button" class="mic-btn-input" data-target="numeroColeta" title="Falar o número da coleta">
-                <i class="fa-solid fa-microphone"></i>
-            </button>
-        </div>
-        <p class="mic-status-text" data-status-for="numeroColeta"></p>
-    </div>
-
-    <div class="form-step">
-        <label for="numeroMelgueiras" class="form-label-coleta">Quantas melgueiras foram coletadas?</label>
-        <div class="input-with-mic">
-            <input type="number" id="numeroMelgueiras" required class="form-input-coleta" value="1" inputmode="numeric">
-            <button type="button" class="mic-btn-input" data-target="numeroMelgueiras" title="Falar o número de melgueiras">
-                <i class="fa-solid fa-microphone"></i>
-            </button>
-        </div>
-        <p class="mic-status-text" data-status-for="numeroMelgueiras"></p>
-    </div>
-
-    <div class="form-step">
-        <label for="pesoNinhoVazio" class="form-label-coleta">Peso do Ninho Vazio (kg)</label>
-        <div class="input-with-mic">
-            <input type="number" step="0.01" id="pesoNinhoVazio" required class="form-input-coleta" placeholder="Ex: 2,5" inputmode="decimal">
-            <button type="button" class="mic-btn-input" data-target="pesoNinhoVazio" title="Falar o peso do ninho vazio">
-                <i class="fa-solid fa-microphone"></i>
-            </button>
-        </div>
-        <p class="mic-status-text" data-status-for="pesoNinhoVazio"></p>
-    </div>
-
-    <div class="form-step">
-        <label for="pesoQuadrosOperculos" class="form-label-coleta">Peso dos Quadros + Opérculos (kg)</label>
-        <div class="input-with-mic">
-            <input type="number" step="0.01" id="pesoQuadrosOperculos" required class="form-input-coleta" placeholder="Ex: 1,8" inputmode="decimal">
-            <button type="button" class="mic-btn-input" data-target="pesoQuadrosOperculos" title="Falar o peso dos quadros">
-                <i class="fa-solid fa-microphone"></i>
-            </button>
-        </div>
-        <p class="mic-status-text" data-status-for="pesoQuadrosOperculos"></p>
-    </div>
-
-    <div class="form-step">
-        <label for="pesoMelgueiraVazia" class="form-label-coleta">Peso da Melgueira Vazia (kg)</label>
-        <div class="input-with-mic">
-            <input type="number" step="0.01" id="pesoMelgueiraVazia" required class="form-input-coleta" placeholder="Ex: 1,5" inputmode="decimal">
-            <button type="button" class="mic-btn-input" data-target="pesoMelgueiraVazia" title="Falar o peso da melgueira vazia">
-                <i class="fa-solid fa-microphone"></i>
-            </button>
-        </div>
-        <p class="mic-status-text" data-status-for="pesoMelgueiraVazia"></p>
-    </div>
-
-    <div class="form-step">
-        <label for="pesoQuadrosMelgueira" class="form-label-coleta">Peso dos Quadros da Melgueira (kg)</label>
-        <div class="input-with-mic">
-            <input type="number" step="0.01" id="pesoQuadrosMelgueira" required class="form-input-coleta" placeholder="Ex: 3,2" inputmode="decimal">
-            <button type="button" class="mic-btn-input" data-target="pesoQuadrosMelgueira" title="Falar o peso dos quadros da melgueira">
-                <i class="fa-solid fa-microphone"></i>
-            </button>
-        </div>
-        <p class="mic-status-text" data-status-for="pesoQuadrosMelgueira"></p>
-    </div>
-
-    <div class="form-step">
-        <label for="observacoes" class="form-label-coleta">Alguma observação importante?</label>
-        <div class="input-with-mic">
-            <textarea id="observacoes" rows="4" class="form-input-coleta"></textarea>
-            <button type="button" class="mic-btn-input" data-target="observacoes" title="Gravar observação por voz">
-                <i class="fa-solid fa-microphone"></i>
-            </button>
-        </div>
-        <p class="mic-status-text" data-status-for="observacoes"></p>
-    </div>
-
-     <div class="form-step final-step">
-        <h2 class="form-label-coleta">Tudo pronto!</h2>
-        <p class="final-step-message">Revise os dados se necessário ou clique em salvar para finalizar.</p>
-        <i class="fa-solid fa-check-circle final-step-icon"></i>
-    </div>
-</form>
+    <script type="module" src="script.js"></script>
+    <script type="module" src="coleta.js"></script>
+</body>
+</html>
