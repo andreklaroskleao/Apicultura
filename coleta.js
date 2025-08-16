@@ -209,6 +209,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // --- LÓGICA DE TRANSCRIÇÃO DE VOZ ---
+    const convertWordsToNumbers = (text) => {
+        const wordMap = {
+            'zero': '0', 'um': '1', 'uma': '1', 'dois': '2', 'duas': '2', 'três': '3', 'quatro': '4',
+            'cinco': '5', 'seis': '6', 'sete': '7', 'oito': '8', 'nove': '9', 'dez': '10',
+            'vírgula': '.', 'ponto': '.'
+        };
+        const words = text.toLowerCase().split(' ');
+        const resultWords = words.map(word => wordMap[word] || word);
+        return resultWords.join(' ');
+    };
+
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const micButtons = document.querySelectorAll('.mic-btn-input');
 
@@ -265,11 +276,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (activeMicButton) {
                 const targetId = activeMicButton.dataset.target;
                 const targetInput = document.getElementById(targetId);
-                const cleanedTranscript = transcript.replace(/\./g, '').replace(/,/g, '.').trim();
+
+                const numericTranscript = convertWordsToNumbers(transcript);
+                const cleanedTranscript = numericTranscript.replace(/\s/g, '');
+
                 if (targetInput.type === 'number') {
                     const numericValue = parseFloat(cleanedTranscript);
                     if (!isNaN(numericValue)) {
                         targetInput.value = numericValue;
+                    } else {
+                        console.warn(`Não foi possível converter "${transcript}" para um número.`);
                     }
                 } else {
                     const textoAtual = targetInput.value;
