@@ -149,7 +149,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- LÓGICA DE LEITURA DE QR CODE ---
     const scanQrBtn = document.getElementById('scan-qr-btn');
-    const cancelScanBtn = document.getElementById('cancel-scan-btn');
     const qrReaderDiv = document.getElementById('qr-reader');
     const qrSuccessMessage = document.getElementById('qr-success-message');
     const qrSuccessText = document.getElementById('qr-success-text');
@@ -158,22 +157,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const html5QrCode = new Html5Qrcode("qr-reader");
 
         const stopScanner = () => {
-            html5QrCode.stop().then(() => {
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().then(() => {
+                    qrReaderDiv.style.display = 'none';
+                    scanQrBtn.style.display = 'block';
+                }).catch(err => {
+                    console.error("Falha ao parar o leitor de QR Code.", err);
+                    qrReaderDiv.style.display = 'none';
+                    scanQrBtn.style.display = 'block';
+                });
+            } else {
                 qrReaderDiv.style.display = 'none';
                 scanQrBtn.style.display = 'block';
-                if(cancelScanBtn) cancelScanBtn.classList.add('hidden');
-            }).catch(err => {
-                console.error("Falha ao parar o leitor de QR Code.", err);
-                qrReaderDiv.style.display = 'none';
-                scanQrBtn.style.display = 'block';
-                if(cancelScanBtn) cancelScanBtn.classList.add('hidden');
-            });
+            }
         };
 
         scanQrBtn.addEventListener('click', () => {
             qrReaderDiv.style.display = 'block';
             scanQrBtn.style.display = 'none';
-            cancelScanBtn.classList.remove('hidden');
 
             const qrCodeSuccessCallback = (decodedText, decodedResult) => {
                 stopScanner();
@@ -205,10 +206,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     stopScanner();
                 });
         });
-
-        if (cancelScanBtn) {
-            cancelScanBtn.addEventListener('click', stopScanner);
-        }
     }
     
     // --- LÓGICA DE TRANSCRIÇÃO DE VOZ ---
