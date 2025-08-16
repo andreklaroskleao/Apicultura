@@ -75,6 +75,13 @@
                     <div class="form-step">
                         <label for="observacoes" class="form-label-coleta">Alguma observação importante?</label>
                         <textarea id="observacoes" rows="4" class="form-input-coleta"></textarea>
+                        
+                        <div class="mic-container">
+                            <button type="button" id="mic-btn" class="button-secondary" title="Gravar observação por voz">
+                                <i class="fa-solid fa-microphone"></i>
+                            </button>
+                            <p id="mic-status" class="mic-status-text"></p>
+                        </div>
                     </div>
 
                      <div class="form-step final-step">
@@ -102,4 +109,5 @@
     <script type="module" src="script.js"></script>
     <script type="module" src="coleta.js"></script>
 </body>
+
 </html>
