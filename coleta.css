@@ -16,7 +16,7 @@
 #coleta-wizard-card {
     width: 100%;
     max-width: 600px;
-    padding: 2rem;
+    padding: 2rem 1.5rem; /* Ajuste no padding lateral */
 }
 
 #coleta-progress-bar {
@@ -52,10 +52,10 @@
 
 .form-label-coleta {
     display: block;
-    font-size: 1.75rem; /* Tamanho grande para fácil leitura */
+    font-size: 1.5rem; /* Levemente reduzido para caber melhor */
     font-weight: 600;
     color: var(--color-text-dark);
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
 }
 
 .form-input-coleta {
@@ -66,6 +66,7 @@
     background-color: #fff;
     border: 2px solid var(--color-border);
     border-radius: 0.5rem;
+    box-sizing: border-box; /* Garante que o padding não aumente a largura */
     transition: all 0.2s ease-in-out;
 }
 
@@ -75,7 +76,61 @@
     box-shadow: 0 0 0 4px #fbbF77;
 }
 
-/* Navegação */
+/* --- ATUALIZAÇÃO PARA ORGANIZAÇÃO DO MICROFONE --- */
+
+/* Novo container para o input e o botão */
+.input-with-mic {
+    position: relative; /* Essencial para posicionar o botão dentro dele */
+    width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+/* Ajuste no padding do input para dar espaço ao botão */
+.input-with-mic .form-input-coleta {
+    padding-right: 60px; /* Adiciona espaço à direita para o botão não sobrepor o texto */
+}
+
+/* Novo estilo para o botão de microfone */
+.mic-btn-input {
+    position: absolute; /* Posiciona o botão sobre o input */
+    right: 6px; /* Distância da borda direita */
+    top: 50%;
+    transform: translateY(-50%); /* Alinha verticalmente no centro */
+    
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: none;
+    background-color: var(--color-secondary);
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.mic-btn-input:hover {
+    background-color: var(--color-secondary-hover);
+}
+
+/* Estilo para quando o microfone estiver ativo (ouvindo) */
+.mic-btn-input.listening {
+    background-color: var(--color-danger); /* Fica vermelho ao ouvir */
+}
+
+.mic-status-text {
+    font-size: 0.9rem;
+    color: var(--color-text-light);
+    margin-top: 0.5rem;
+    min-height: 1.2rem; /* Evita que a interface "pule" */
+}
+
+
+/* --- SEÇÃO DE NAVEGAÇÃO E FINAL --- */
+
 .navigation-buttons {
     margin-top: 2.5rem;
     display: flex;
@@ -111,36 +166,4 @@
 /* Esconde o botão 'Anterior' no primeiro passo */
 #prev-btn.hidden {
     visibility: hidden;
-
-}
-/* Estilos para o botão de microfone e status */
-
-.mic-container {
-    margin-top: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-#mic-btn {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%; /* Botão circular */
-    padding: 0;
-    font-size: 1.5rem;
-    flex-grow: 0;
-    transition: background-color 0.3s, color 0.3s;
-}
-
-/* Estilo para quando o microfone estiver ativo (ouvindo) */
-#mic-btn.listening {
-    background-color: var(--color-danger); /* Fica vermelho ao ouvir */
-    color: white;
-}
-
-.mic-status-text {
-    font-size: 0.9rem;
-    color: var(--color-text-light);
-    min-height: 1.2rem; /* Evita que a interface "pule" */
 }
