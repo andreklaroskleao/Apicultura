@@ -64,71 +64,18 @@ try {
 
 setLogLevel('debug');
 
-// --- REFERÊNCIAS AO DOM ---
-const authContainer = document.getElementById('auth-container');
-const appContainer = document.getElementById('app-container');
-const loginForm = document.getElementById('login-form');
-const registerForm = document.getElementById('register-form');
-const loginTab = document.getElementById('login-tab');
-const registerTab = document.getElementById('register-tab');
-const authError = document.getElementById('auth-error');
-const logoutButton = document.getElementById('logout-button');
-const userInfoDisplay = document.getElementById('user-info');
-const dataForm = document.getElementById('data-form');
-const dataTableBody = document.getElementById('data-table-body');
-const formTitle = document.getElementById('form-title');
-const collectionIdInput = document.getElementById('collection-id');
-const hiveIdSelect = document.getElementById('hive-id-select');
-const cancelEditButton = document.getElementById('cancel-edit-button');
-const registerStateSelect = document.getElementById('register-state');
-const registerCitySelect = document.getElementById('register-city');
-// Views
-const dashboardView = document.getElementById('dashboard-view');
-const mapView = document.getElementById('map-view'); 
-const monitoringView = document.getElementById('monitoring-view');
-const managementView = document.getElementById('management-view');
-const reportsView = document.getElementById('reports-view');
-const adminView = document.getElementById('admin-view');
-// Links de Navegação
-const dashboardLink = document.getElementById('dashboard-link');
-const mapViewLink = document.getElementById('map-view-link');
-const monitoringLink = document.getElementById('monitoring-link');
-const managementLink = document.getElementById('management-link');
-const reportsLink = document.getElementById('reports-link');
-const adminPanelLink = document.getElementById('admin-panel-link');
-// Outros
-const adminUsersTableBody = document.getElementById('admin-users-table-body');
-const notificationBell = document.getElementById('notification-bell');
-const notificationCount = document.getElementById('notification-count');
-const notificationDropdown = document.getElementById('notification-dropdown');
-const requestAccessBtn = document.getElementById('request-access-btn');
-const requestAccessModal = document.getElementById('request-access-modal');
-const requestAccessForm = document.getElementById('request-access-form');
-const modalCancelBtn = document.getElementById('modal-cancel-btn');
-const viewDetailsModal = document.getElementById('view-details-modal');
-const viewModalTitle = document.getElementById('view-modal-title');
-const viewModalBody = document.getElementById('view-modal-body');
-const viewModalCloseBtn = document.getElementById('view-modal-close-btn');
-const viewModalCloseBtn2 = document.getElementById('view-modal-close-btn-2');
-const profileButton = document.getElementById('profile-button');
-const profileModal = document.getElementById('profile-modal');
-const profileModalCloseBtn = document.getElementById('profile-modal-close-btn');
-const profileModalCloseBtn2 = document.getElementById('profile-modal-close-btn-2');
-const profileForm = document.getElementById('profile-form');
-// Gestão de Colmeias
-const hiveForm = document.getElementById('hive-form');
-const hiveIdInput = document.getElementById('hive-id-input');
-const hivesTableBody = document.getElementById('hives-table-body');
-// Filtro de Coletas
-const collectionFilterInput = document.getElementById('collection-filter-input');
-// Modal de Edição de Colmeia
-const editHiveModal = document.getElementById('edit-hive-modal');
-const editHiveForm = document.getElementById('edit-hive-form');
-const editHiveModalTitle = document.getElementById('edit-hive-modal-title');
-const editHiveIdInput = document.getElementById('edit-hive-id');
-const editHiveModalCloseBtn = document.getElementById('edit-hive-modal-close-btn');
-const editHiveModalCancelBtn = document.getElementById('edit-hive-modal-cancel-btn');
-
+// --- DECLARAÇÃO DAS VARIÁVEIS GLOBAIS ---
+// (Mantém as declarações de variáveis aqui para que fiquem acessíveis em todo o script)
+let authContainer, appContainer, loginForm, registerForm, loginTab, registerTab, authError, logoutButton,
+    userInfoDisplay, dataForm, dataTableBody, formTitle, collectionIdInput, hiveIdSelect, cancelEditButton,
+    registerStateSelect, registerCitySelect, dashboardView, mapView, monitoringView, managementView,
+    reportsView, adminView, dashboardLink, mapViewLink, monitoringLink, managementLink, reportsLink,
+    adminPanelLink, adminUsersTableBody, notificationBell, notificationCount, notificationDropdown,
+    requestAccessBtn, requestAccessModal, requestAccessForm, modalCancelBtn, viewDetailsModal,
+    viewModalTitle, viewModalBody, viewModalCloseBtn, viewModalCloseBtn2, profileButton, profileModal,
+    profileModalCloseBtn, profileModalCloseBtn2, profileForm, hiveForm, hiveIdInput, hivesTableBody,
+    collectionFilterInput, editHiveModal, editHiveForm, editHiveModalTitle, editHiveIdInput,
+    editHiveModalCloseBtn, editHiveModalCancelBtn;
 
 let currentUser = null;
 let unsubscribeFromCollections = null;
@@ -173,9 +120,6 @@ const switchTabs = (showLogin) => {
     authError.textContent = '';
 };
 
-loginTab.addEventListener('click', () => switchTabs(true));
-registerTab.addEventListener('click', () => switchTabs(false));
-
 function showView(viewToShow) {
     dashboardView.classList.add('hidden');
     mapView.classList.add('hidden');
@@ -201,14 +145,6 @@ function showView(viewToShow) {
     if (viewToShow === reportsView) reportsLink.classList.add('active');
     if (viewToShow === adminView) adminPanelLink.classList.add('active');
 };
-
-dashboardLink.addEventListener('click', (e) => { e.preventDefault(); showView(dashboardView); });
-mapViewLink.addEventListener('click', (e) => { e.preventDefault(); showView(mapView); initializeFullMapView(); });
-monitoringLink.addEventListener('click', (e) => { e.preventDefault(); showView(monitoringView); initializeMonitoringPage(); });
-managementLink.addEventListener('click', (e) => { e.preventDefault(); showView(managementView); initializeManagementPage(); });
-reportsLink.addEventListener('click', (e) => { e.preventDefault(); showView(reportsView); initializeReportPage(); });
-adminPanelLink.addEventListener('click', (e) => { e.preventDefault(); showView(adminView); });
-
 
 // --- LÓGICA DO MAPA E CLIMA ---
 function initializeCreationMap(lat, lng) {
@@ -261,7 +197,6 @@ function initializeFullMapView() {
     });
 }
 
-// NOVA FUNÇÃO para inicializar o mapa de edição
 function initializeEditMap(lat, lon) {
     if (editMap) {
         editMap.setView([lat, lon], 15);
@@ -274,7 +209,6 @@ function initializeEditMap(lat, lon) {
             icon: hiveIcon
         }).addTo(editMap);
     }
-    // Garante que o mapa seja renderizado corretamente dentro do modal
     setTimeout(() => editMap.invalidateSize(), 200);
 }
 
@@ -359,8 +293,6 @@ async function fetchCities(stateUF) {
     }
 }
 
-registerStateSelect.addEventListener('change', (e) => fetchCities(e.target.value));
-
 async function getCoordsForCity(city, state) {
     try {
         const statesResponse = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados?orderBy=nome');
@@ -428,110 +360,8 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-registerForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const name = document.getElementById('register-name').value;
-    const apiaryName = document.getElementById('register-apiary').value;
-    const email = document.getElementById('register-email').value;
-    const password = document.getElementById('register-password').value;
-    const state = registerStateSelect.value;
-    const city = registerCitySelect.value;
-    
-    if (!state || !city || !name || !apiaryName) {
-        authError.textContent = "Todos os campos são obrigatórios.";
-        return;
-    }
-
-    authError.textContent = 'A obter coordenadas...';
-    const coords = await getCoordsForCity(city, state);
-    if (!coords) {
-        authError.textContent = "Não foi possível encontrar a localização. Tente novamente.";
-        return;
-    }
-    authError.textContent = '';
-
-    try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-        
-        await setDoc(doc(db, "users", user.uid), {
-            name: name,
-            apiaryName: apiaryName,
-            email: user.email,
-            role: 'user',
-            state: registerStateSelect.options[registerStateSelect.selectedIndex].text,
-            city: city,
-            latitude: coords.latitude,
-            longitude: coords.longitude,
-            createdAt: new Date()
-        });
-    } catch (error) {
-        authError.textContent = "Falha no registo: " + error.message;
-    }
-});
-
-loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
-    authError.textContent = '';
-    try {
-        await signInWithEmailAndPassword(auth, email, password);
-    } catch (error) {
-        authError.textContent = "Falha no login: " + error.message;
-    }
-});
-
-logoutButton.addEventListener('click', () => signOut(auth));
-
-profileButton.addEventListener('click', () => {
-    document.getElementById('profile-name').value = currentUser.name || '';
-    document.getElementById('profile-apiary').value = currentUser.apiaryName || '';
-    document.getElementById('profile-email').textContent = currentUser.email;
-    document.getElementById('profile-location').textContent = `${currentUser.city}, ${currentUser.state}`;
-    profileModal.classList.add('is-open');
-});
-
-profileForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const newName = document.getElementById('profile-name').value.trim();
-    const newApiaryName = document.getElementById('profile-apiary').value.trim();
-    
-    const dataToUpdate = {};
-    if (newName && newName !== currentUser.name) {
-        dataToUpdate.name = newName;
-    }
-    if (newApiaryName && newApiaryName !== currentUser.apiaryName) {
-        dataToUpdate.apiaryName = newApiaryName;
-    }
-
-    if (Object.keys(dataToUpdate).length > 0) {
-        try {
-            const userDocRef = doc(db, "users", currentUser.uid);
-            await updateDoc(userDocRef, dataToUpdate);
-            
-            if(dataToUpdate.name) {
-                currentUser.name = newName;
-                 userInfoDisplay.textContent = newName.split(' ')[0];
-            }
-            if(dataToUpdate.apiaryName) currentUser.apiaryName = newApiaryName;
-
-            alert("Perfil atualizado com sucesso!");
-            profileModal.classList.remove('is-open');
-        } catch (error) {
-            console.error("Erro ao atualizar perfil:", error);
-            alert("Não foi possível atualizar o perfil.");
-        }
-    } else {
-        profileModal.classList.remove('is-open');
-    }
-});
-
-profileModalCloseBtn.addEventListener('click', () => profileModal.classList.remove('is-open'));
-profileModalCloseBtn2.addEventListener('click', () => profileModal.classList.remove('is-open'));
-
-
-// --- GESTÃO DE COLMEIAS E COLETAS (LÓGICA CENTRAL)---
+// --- DEMAIS FUNÇÕES (GESTÃO, COLETAS, NOTIFICAÇÕES, ETC.) ---
+// (Todas as outras funções do seu script.js, como listenToHives, renderCollectionsTable, etc., permanecem aqui sem alteração)
 
 function listenToHives(userId) {
     const q = query(collection(db, "hives"), where("accessibleTo", "array-contains", userId));
@@ -656,46 +486,6 @@ function populateHiveSelects() {
     hiveIdSelect.innerHTML = `<option value="">Selecione...</option>${optionsHtml}`;
 }
 
-hiveForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const newHiveId = hiveIdInput.value.trim();
-    const boxType = document.getElementById('hive-box-type').value;
-    const queen = document.getElementById('hive-queen').value.trim();
-    const installationYear = document.getElementById('hive-installation-year').value;
-
-    if (!newHiveId || !boxType || !queen || !installationYear) {
-        alert("Todos os campos para adicionar a colmeia são obrigatórios.");
-        return;
-    }
-
-    const { lat, lng } = creationMarker.getLatLng();
-
-    try {
-        const hiveRef = doc(db, "hives", newHiveId);
-        
-        await setDoc(hiveRef, {
-            ownerId: currentUser.uid,
-            createdAt: new Date(),
-            accessibleTo: [currentUser.uid],
-            editors: [],
-            boxType: boxType,
-            queen: queen,
-            installationYear: parseInt(installationYear),
-            latitude: lat,
-            longitude: lng
-        });
-
-        hiveForm.reset();
-        initializeCreationMap(currentUser.latitude, currentUser.longitude);
-        
-        console.log(`Colmeia #${newHiveId} criada com sucesso.`);
-
-    } catch (error) {
-        console.error("Erro ao adicionar colmeia:", error);
-        alert("Ocorreu um erro ao criar a colmeia. A causa mais provável é que este N° já existe.");
-    }
-});
-
 async function deleteHive(hiveId) {
     if (confirm(`ATENÇÃO: Isto irá excluir a colmeia #${hiveId} e TODOS os registos de coleta associados a ela. Esta ação é irreversível. Deseja continuar?`)) {
         try {
@@ -717,57 +507,6 @@ async function deleteHive(hiveId) {
         }
     }
 }
-
-
-dataForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if (!currentUser) return;
-    
-    const hiveId = hiveIdSelect.value;
-    if (!hiveId) {
-        alert("Por favor, selecione uma colmeia.");
-        return;
-    }
-
-    const hive = userHives.find(h => h.id === hiveId);
-    if (!hive) {
-        alert("Colmeia selecionada inválida.");
-        return;
-    }
-
-    const collectionData = {
-        hiveId: hiveId,
-        data: document.getElementById('data').value,
-        ownerId: hive.ownerId,
-        accessibleTo: hive.accessibleTo,
-        editors: hive.editors,
-        lastUpdatedAt: new Date(),
-        numeroColeta: parseInt(document.getElementById('numeroColeta').value),
-        numeroMelgueiras: parseInt(document.getElementById('numeroMelgueiras').value),
-        pesoNinhoVazio: parseFloat(document.getElementById('pesoNinhoVazio').value),
-        pesoQuadrosOperculos: parseFloat(document.getElementById('pesoQuadrosOperculos').value),
-        pesoMelgueiraVazia: parseFloat(document.getElementById('pesoMelgueiraVazia').value),
-        pesoQuadrosMelgueira: parseFloat(document.getElementById('pesoQuadrosMelgueira').value),
-        observacoes: document.getElementById('observacoes').value,
-    };
-
-    const collectionId = collectionIdInput.value;
-    try {
-        if (collectionId) {
-            const collectionRef = doc(db, "collections", collectionId);
-            const {createdAt, ...updateData} = collectionData;
-            await updateDoc(collectionRef, updateData);
-        } else {
-            collectionData.createdAt = new Date();
-            await addDoc(collection(db, "collections"), collectionData);
-        }
-        
-        resetForm();
-    } catch (error) {
-        console.error("Erro ao salvar dados da coleta:", error);
-        alert("Falha ao salvar os dados.");
-    }
-});
 
 async function setupEditForm(collId) {
     const collectionRef = doc(db, "collections", collId);
@@ -802,7 +541,6 @@ function resetForm() {
     formTitle.textContent = "Adicionar Nova Coleta";
     cancelEditButton.classList.add('hidden');
 }
-cancelEditButton.addEventListener('click', resetForm);
 
 async function deleteCollection(collId, hiveId) {
     if (confirm(`Tem a certeza que deseja excluir esta coleta da colmeia #${hiveId}?`)) {
@@ -815,23 +553,6 @@ async function deleteCollection(collId, hiveId) {
     }
 }
 
-// --- FILTRO DA TABELA DE COLETAS ---
-collectionFilterInput.addEventListener('input', (e) => {
-    const searchTerm = e.target.value.toLowerCase();
-    const rows = dataTableBody.querySelectorAll('tr');
-
-    rows.forEach(row => {
-        const hiveId = row.dataset.hiveid;
-        if (hiveId && hiveId.toLowerCase().startsWith(searchTerm)) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
-        }
-    });
-});
-
-
-// --- LÓGICA DE VISUALIZAÇÃO DE DETALHES E GESTÃO DE PERMISSÕES ---
 function displayDetailMap(hiveId, lat, lng) {
     const mapContainerId = `hive-detail-map-${hiveId}`;
     const container = document.getElementById(mapContainerId);
@@ -965,10 +686,6 @@ async function showCollectionDetails(collId){
      viewDetailsModal.classList.add('is-open');
 }
 
-
-viewModalCloseBtn.addEventListener('click', () => viewDetailsModal.classList.remove('is-open'));
-viewModalCloseBtn2.addEventListener('click', () => viewDetailsModal.classList.remove('is-open'));
-
 async function toggleEditPermission(hiveId, userId, canEdit) {
     const hiveRef = doc(db, "hives", hiveId);
     try {
@@ -997,30 +714,6 @@ async function removeShare(hiveId, userId, userName) {
     }
 }
 
-viewModalBody.addEventListener('click', (e) => {
-    const editToggle = e.target.closest('.edit-toggle');
-    if (editToggle) {
-        const { hiveid, userid } = editToggle.dataset;
-        toggleEditPermission(hiveid, userid, editToggle.checked);
-        return; 
-    }
-
-    const removeBtn = e.target.closest('.remove-share-btn');
-    if (removeBtn) {
-        const { hiveid, userid, username } = removeBtn.dataset;
-        removeShare(hiveid, userid, username);
-        return;
-    }
-
-    const openEditBtn = e.target.closest('.open-edit-hive-btn');
-    if(openEditBtn){
-        const { hiveid } = openEditBtn.dataset;
-        openEditHiveModal(hiveid);
-    }
-});
-
-// --- LÓGICA DE EDIÇÃO DA COLMEIA ---
-
 function openEditHiveModal(hiveId) {
     const hive = userHives.find(h => h.id === hiveId);
     if (!hive) {
@@ -1037,48 +730,11 @@ function openEditHiveModal(hiveId) {
     viewDetailsModal.classList.remove('is-open');
     editHiveModal.classList.add('is-open');
 
-    // Inicializa ou atualiza o mapa de edição com a localização atual da colmeia
     const lat = hive.latitude || currentUser.latitude || -31.33;
     const lon = hive.longitude || currentUser.longitude || -54.10;
     initializeEditMap(lat, lon);
 }
 
-editHiveForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const hiveId = editHiveIdInput.value;
-    
-    // Pega as novas coordenadas do marcador no mapa de edição
-    const { lat, lng } = editMarker.getLatLng();
-
-    const dataToUpdate = {
-        boxType: document.getElementById('edit-hive-box-type').value,
-        queen: document.getElementById('edit-hive-queen').value.trim(),
-        installationYear: parseInt(document.getElementById('edit-hive-installation-year').value),
-        latitude: lat,
-        longitude: lng
-    };
-
-    if (!dataToUpdate.boxType || !dataToUpdate.queen || !dataToUpdate.installationYear) {
-        alert("Todos os campos são obrigatórios.");
-        return;
-    }
-
-    try {
-        const hiveRef = doc(db, "hives", hiveId);
-        await updateDoc(hiveRef, dataToUpdate);
-        alert("Dados da colmeia atualizados com sucesso!");
-        editHiveModal.classList.remove('is-open');
-    } catch (error) {
-        console.error("Erro ao atualizar a colmeia:", error);
-        alert("Falha ao atualizar os dados da colmeia.");
-    }
-});
-
-editHiveModalCloseBtn.addEventListener('click', () => editHiveModal.classList.remove('is-open'));
-editHiveModalCancelBtn.addEventListener('click', () => editHiveModal.classList.remove('is-open'));
-
-
-// --- LÓGICA DE ADMINISTRAÇÃO ---
 async function loadAdminUsers() {
     const usersCollection = collection(db, "users");
     onSnapshot(usersCollection, (snapshot) => {
@@ -1111,63 +767,6 @@ async function updateUserRole(uid, newRole) {
     const userDocRef = doc(db, "users", uid);
     await updateDoc(userDocRef, { role: newRole });
 }
-
-// --- LÓGICA DE SOLICITAÇÃO DE ACESSO E NOTIFICAÇÕES ---
-requestAccessBtn.addEventListener('click', () => requestAccessModal.classList.add('is-open'));
-modalCancelBtn.addEventListener('click', () => requestAccessModal.classList.remove('is-open'));
-requestAccessForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const hiveId = document.getElementById('record-id-input').value.trim();
-    if (!hiveId) return;
-
-    try {
-        const hiveRef = doc(db, "hives", hiveId);
-        const hiveSnap = await getDoc(hiveRef);
-
-        if (!hiveSnap.exists()) {
-            alert("Colmeia não encontrada. Verifique o número digitado.");
-            return;
-        }
-        
-        const ownerId = hiveSnap.data().ownerId;
-
-        if (ownerId === currentUser.uid) {
-            alert("Você já é o dono desta colmeia.");
-            return;
-        }
-
-        const q = query(collection(db, "accessRequests"), where("hiveId", "==", hiveId), where("requesterId", "==", currentUser.uid));
-        const existingRequests = await getDocs(q);
-        if (!existingRequests.empty) {
-            const existingStatus = existingRequests.docs[0].data().status;
-            if (existingStatus === 'pending') {
-                 alert("Você já solicitou acesso a esta colmeia. Aguarde a aprovação.");
-            } else if (existingStatus === 'accepted') {
-                alert("Você já tem acesso a esta colmeia.");
-            } else {
-                 alert("Sua solicitação anterior foi recusada.");
-            }
-            return;
-        }
-
-        await addDoc(collection(db, "accessRequests"), {
-            requesterId: currentUser.uid,
-            requesterName: currentUser.name || currentUser.email,
-            ownerId: ownerId,
-            hiveId: hiveId,
-            status: 'pending',
-            createdAt: new Date()
-        });
-
-        alert("Solicitação de acesso enviada!");
-        requestAccessModal.classList.remove('is-open');
-        requestAccessForm.reset();
-
-    } catch (error) {
-        console.error("Erro ao enviar solicitação de acesso:", error);
-        alert("Ocorreu um erro ao enviar a sua solicitação. Verifique se tem permissão para esta ação e tente novamente.");
-    }
-});
 
 function listenForNotifications(userId) {
     const q = query(collection(db, "accessRequests"), where("ownerId", "==", userId), where("status", "==", "pending"));
@@ -1203,21 +802,6 @@ function listenForNotifications(userId) {
         }
     });
 }
-notificationBell.addEventListener('click', () => {
-    notificationDropdown.classList.toggle('hidden');
-});
-document.addEventListener('click', async (e) => {
-    const acceptBtn = e.target.closest('.accept-btn');
-    if (acceptBtn) {
-        const { reqid, hiveid, requesterid } = acceptBtn.dataset;
-        await handleAccessRequest(reqid, hiveid, requesterid, 'accepted');
-    }
-     const rejectBtn = e.target.closest('.reject-btn');
-    if (rejectBtn) {
-        const { reqid } = rejectBtn.dataset;
-        await handleAccessRequest(reqid, null, null, 'rejected');
-    }
-});
 
 async function handleAccessRequest(requestId, hiveId, requesterId, newStatus) {
     const requestRef = doc(db, "accessRequests", requestId);
@@ -1265,21 +849,439 @@ async function handleAccessRequest(requestId, hiveId, requesterId, newStatus) {
     }
 }
 
+// --- INICIALIZAÇÃO E LISTENERS DE EVENTOS ---
+// Este bloco garante que o script só tentará acessar os elementos da página
+// depois que toda a página HTML for carregada.
+document.addEventListener('DOMContentLoaded', () => {
+    // --- REFERÊNCIAS AO DOM ---
+    // (Atribui os elementos do HTML às variáveis)
+    authContainer = document.getElementById('auth-container');
+    appContainer = document.getElementById('app-container');
+    loginForm = document.getElementById('login-form');
+    registerForm = document.getElementById('register-form');
+    loginTab = document.getElementById('login-tab');
+    registerTab = document.getElementById('register-tab');
+    authError = document.getElementById('auth-error');
+    logoutButton = document.getElementById('logout-button');
+    userInfoDisplay = document.getElementById('user-info');
+    dataForm = document.getElementById('data-form');
+    dataTableBody = document.getElementById('data-table-body');
+    formTitle = document.getElementById('form-title');
+    collectionIdInput = document.getElementById('collection-id');
+    hiveIdSelect = document.getElementById('hive-id-select');
+    cancelEditButton = document.getElementById('cancel-edit-button');
+    registerStateSelect = document.getElementById('register-state');
+    registerCitySelect = document.getElementById('register-city');
+    dashboardView = document.getElementById('dashboard-view');
+    mapView = document.getElementById('map-view'); 
+    monitoringView = document.getElementById('monitoring-view');
+    managementView = document.getElementById('management-view');
+    reportsView = document.getElementById('reports-view');
+    adminView = document.getElementById('admin-view');
+    dashboardLink = document.getElementById('dashboard-link');
+    mapViewLink = document.getElementById('map-view-link');
+    monitoringLink = document.getElementById('monitoring-link');
+    managementLink = document.getElementById('management-link');
+    reportsLink = document.getElementById('reports-link');
+    adminPanelLink = document.getElementById('admin-panel-link');
+    adminUsersTableBody = document.getElementById('admin-users-table-body');
+    notificationBell = document.getElementById('notification-bell');
+    notificationCount = document.getElementById('notification-count');
+    notificationDropdown = document.getElementById('notification-dropdown');
+    requestAccessBtn = document.getElementById('request-access-btn');
+    requestAccessModal = document.getElementById('request-access-modal');
+    requestAccessForm = document.getElementById('request-access-form');
+    modalCancelBtn = document.getElementById('modal-cancel-btn');
+    viewDetailsModal = document.getElementById('view-details-modal');
+    viewModalTitle = document.getElementById('view-modal-title');
+    viewModalBody = document.getElementById('view-modal-body');
+    viewModalCloseBtn = document.getElementById('view-modal-close-btn');
+    viewModalCloseBtn2 = document.getElementById('view-modal-close-btn-2');
+    profileButton = document.getElementById('profile-button');
+    profileModal = document.getElementById('profile-modal');
+    profileModalCloseBtn = document.getElementById('profile-modal-close-btn');
+    profileModalCloseBtn2 = document.getElementById('profile-modal-close-btn-2');
+    profileForm = document.getElementById('profile-form');
+    hiveForm = document.getElementById('hive-form');
+    hiveIdInput = document.getElementById('hive-id-input');
+    hivesTableBody = document.getElementById('hives-table-body');
+    collectionFilterInput = document.getElementById('collection-filter-input');
+    editHiveModal = document.getElementById('edit-hive-modal');
+    editHiveForm = document.getElementById('edit-hive-form');
+    editHiveModalTitle = document.getElementById('edit-hive-modal-title');
+    editHiveIdInput = document.getElementById('edit-hive-id');
+    editHiveModalCloseBtn = document.getElementById('edit-hive-modal-close-btn');
+    editHiveModalCancelBtn = document.getElementById('edit-hive-modal-cancel-btn');
 
-// --- INICIALIZAÇÃO ---
-(async () => {
-    await fetchStates();
+    // --- ANEXAÇÃO DOS EVENT LISTENERS ---
+    // (Todo o código que usa .addEventListener é movido para cá)
+    loginTab.addEventListener('click', () => switchTabs(true));
+    registerTab.addEventListener('click', () => switchTabs(false));
+
+    dashboardLink.addEventListener('click', (e) => { e.preventDefault(); showView(dashboardView); });
+    mapViewLink.addEventListener('click', (e) => { e.preventDefault(); showView(mapView); initializeFullMapView(); });
+    monitoringLink.addEventListener('click', (e) => { e.preventDefault(); showView(monitoringView); initializeMonitoringPage(); });
+    managementLink.addEventListener('click', (e) => { e.preventDefault(); showView(managementView); initializeManagementPage(); });
+    reportsLink.addEventListener('click', (e) => { e.preventDefault(); showView(reportsView); initializeReportPage(); });
+    adminPanelLink.addEventListener('click', (e) => { e.preventDefault(); showView(adminView); });
+
+    registerStateSelect.addEventListener('change', (e) => fetchCities(e.target.value));
+
+    registerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = document.getElementById('register-name').value;
+        const apiaryName = document.getElementById('register-apiary').value;
+        const email = document.getElementById('register-email').value;
+        const password = document.getElementById('register-password').value;
+        const state = registerStateSelect.value;
+        const city = registerCitySelect.value;
+        
+        if (!state || !city || !name || !apiaryName) {
+            authError.textContent = "Todos os campos são obrigatórios.";
+            return;
+        }
+
+        authError.textContent = 'A obter coordenadas...';
+        const coords = await getCoordsForCity(city, state);
+        if (!coords) {
+            authError.textContent = "Não foi possível encontrar a localização. Tente novamente.";
+            return;
+        }
+        authError.textContent = '';
+
+        try {
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+            
+            await setDoc(doc(db, "users", user.uid), {
+                name: name,
+                apiaryName: apiaryName,
+                email: user.email,
+                role: 'user',
+                state: registerStateSelect.options[registerStateSelect.selectedIndex].text,
+                city: city,
+                latitude: coords.latitude,
+                longitude: coords.longitude,
+                createdAt: new Date()
+            });
+        } catch (error) {
+            authError.textContent = "Falha no registo: " + error.message;
+        }
+    });
+
+    loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = document.getElementById('login-email').value;
+        const password = document.getElementById('login-password').value;
+        authError.textContent = '';
+        try {
+            await signInWithEmailAndPassword(auth, email, password);
+        } catch (error) {
+            authError.textContent = "Falha no login: " + error.message;
+        }
+    });
+
+    logoutButton.addEventListener('click', () => signOut(auth));
+
+    profileButton.addEventListener('click', () => {
+        document.getElementById('profile-name').value = currentUser.name || '';
+        document.getElementById('profile-apiary').value = currentUser.apiaryName || '';
+        document.getElementById('profile-email').textContent = currentUser.email;
+        document.getElementById('profile-location').textContent = `${currentUser.city}, ${currentUser.state}`;
+        profileModal.classList.add('is-open');
+    });
+
+    profileForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const newName = document.getElementById('profile-name').value.trim();
+        const newApiaryName = document.getElementById('profile-apiary').value.trim();
+        
+        const dataToUpdate = {};
+        if (newName && newName !== currentUser.name) {
+            dataToUpdate.name = newName;
+        }
+        if (newApiaryName && newApiaryName !== currentUser.apiaryName) {
+            dataToUpdate.apiaryName = newApiaryName;
+        }
+
+        if (Object.keys(dataToUpdate).length > 0) {
+            try {
+                const userDocRef = doc(db, "users", currentUser.uid);
+                await updateDoc(userDocRef, dataToUpdate);
+                
+                if(dataToUpdate.name) {
+                    currentUser.name = newName;
+                     userInfoDisplay.textContent = newName.split(' ')[0];
+                }
+                if(dataToUpdate.apiaryName) currentUser.apiaryName = newApiaryName;
+
+                alert("Perfil atualizado com sucesso!");
+                profileModal.classList.remove('is-open');
+            } catch (error) {
+                console.error("Erro ao atualizar perfil:", error);
+                alert("Não foi possível atualizar o perfil.");
+            }
+        } else {
+            profileModal.classList.remove('is-open');
+        }
+    });
+
+    profileModalCloseBtn.addEventListener('click', () => profileModal.classList.remove('is-open'));
+    profileModalCloseBtn2.addEventListener('click', () => profileModal.classList.remove('is-open'));
+
+    hiveForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const newHiveId = hiveIdInput.value.trim();
+        const boxType = document.getElementById('hive-box-type').value;
+        const queen = document.getElementById('hive-queen').value.trim();
+        const installationYear = document.getElementById('hive-installation-year').value;
+
+        if (!newHiveId || !boxType || !queen || !installationYear) {
+            alert("Todos os campos para adicionar a colmeia são obrigatórios.");
+            return;
+        }
+
+        const { lat, lng } = creationMarker.getLatLng();
+
+        try {
+            const hiveRef = doc(db, "hives", newHiveId);
+            
+            await setDoc(hiveRef, {
+                ownerId: currentUser.uid,
+                createdAt: new Date(),
+                accessibleTo: [currentUser.uid],
+                editors: [],
+                boxType: boxType,
+                queen: queen,
+                installationYear: parseInt(installationYear),
+                latitude: lat,
+                longitude: lng
+            });
+
+            hiveForm.reset();
+            initializeCreationMap(currentUser.latitude, currentUser.longitude);
+            
+            console.log(`Colmeia #${newHiveId} criada com sucesso.`);
+
+        } catch (error) {
+            console.error("Erro ao adicionar colmeia:", error);
+            alert("Ocorreu um erro ao criar a colmeia. A causa mais provável é que este N° já existe.");
+        }
+    });
+
+    dataForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!currentUser) return;
+        
+        const hiveId = hiveIdSelect.value;
+        if (!hiveId) {
+            alert("Por favor, selecione uma colmeia.");
+            return;
+        }
+
+        const hive = userHives.find(h => h.id === hiveId);
+        if (!hive) {
+            alert("Colmeia selecionada inválida.");
+            return;
+        }
+
+        const collectionData = {
+            hiveId: hiveId,
+            data: document.getElementById('data').value,
+            ownerId: hive.ownerId,
+            accessibleTo: hive.accessibleTo,
+            editors: hive.editors,
+            lastUpdatedAt: new Date(),
+            numeroColeta: parseInt(document.getElementById('numeroColeta').value),
+            numeroMelgueiras: parseInt(document.getElementById('numeroMelgueiras').value),
+            pesoNinhoVazio: parseFloat(document.getElementById('pesoNinhoVazio').value),
+            pesoQuadrosOperculos: parseFloat(document.getElementById('pesoQuadrosOperculos').value),
+            pesoMelgueiraVazia: parseFloat(document.getElementById('pesoMelgueiraVazia').value),
+            pesoQuadrosMelgueira: parseFloat(document.getElementById('pesoQuadrosMelgueira').value),
+            observacoes: document.getElementById('observacoes').value,
+        };
+
+        const collectionId = collectionIdInput.value;
+        try {
+            if (collectionId) {
+                const collectionRef = doc(db, "collections", collectionId);
+                const {createdAt, ...updateData} = collectionData;
+                await updateDoc(collectionRef, updateData);
+            } else {
+                collectionData.createdAt = new Date();
+                await addDoc(collection(db, "collections"), collectionData);
+            }
+            
+            resetForm();
+        } catch (error) {
+            console.error("Erro ao salvar dados da coleta:", error);
+            alert("Falha ao salvar os dados.");
+        }
+    });
+
+    cancelEditButton.addEventListener('click', resetForm);
+
+    collectionFilterInput.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        const rows = dataTableBody.querySelectorAll('tr');
+
+        rows.forEach(row => {
+            const hiveId = row.dataset.hiveid;
+            if (hiveId && hiveId.toLowerCase().startsWith(searchTerm)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+
+    viewModalCloseBtn.addEventListener('click', () => viewDetailsModal.classList.remove('is-open'));
+    viewModalCloseBtn2.addEventListener('click', () => viewDetailsModal.classList.remove('is-open'));
+
+    viewModalBody.addEventListener('click', (e) => {
+        const editToggle = e.target.closest('.edit-toggle');
+        if (editToggle) {
+            const { hiveid, userid } = editToggle.dataset;
+            toggleEditPermission(hiveid, userid, editToggle.checked);
+            return; 
+        }
+
+        const removeBtn = e.target.closest('.remove-share-btn');
+        if (removeBtn) {
+            const { hiveid, userid, username } = removeBtn.dataset;
+            removeShare(hiveid, userid, username);
+            return;
+        }
+
+        const openEditBtn = e.target.closest('.open-edit-hive-btn');
+        if(openEditBtn){
+            const { hiveid } = openEditBtn.dataset;
+            openEditHiveModal(hiveid);
+        }
+    });
+
+    editHiveForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const hiveId = editHiveIdInput.value;
+        
+        const { lat, lng } = editMarker.getLatLng();
+
+        const dataToUpdate = {
+            boxType: document.getElementById('edit-hive-box-type').value,
+            queen: document.getElementById('edit-hive-queen').value.trim(),
+            installationYear: parseInt(document.getElementById('edit-hive-installation-year').value),
+            latitude: lat,
+            longitude: lng
+        };
+
+        if (!dataToUpdate.boxType || !dataToUpdate.queen || !dataToUpdate.installationYear) {
+            alert("Todos os campos são obrigatórios.");
+            return;
+        }
+
+        try {
+            const hiveRef = doc(db, "hives", hiveId);
+            await updateDoc(hiveRef, dataToUpdate);
+            alert("Dados da colmeia atualizados com sucesso!");
+            editHiveModal.classList.remove('is-open');
+        } catch (error) {
+            console.error("Erro ao atualizar a colmeia:", error);
+            alert("Falha ao atualizar os dados da colmeia.");
+        }
+    });
+
+    editHiveModalCloseBtn.addEventListener('click', () => editHiveModal.classList.remove('is-open'));
+    editHiveModalCancelBtn.addEventListener('click', () => editHiveModal.classList.remove('is-open'));
+
+    requestAccessBtn.addEventListener('click', () => requestAccessModal.classList.add('is-open'));
+    modalCancelBtn.addEventListener('click', () => requestAccessModal.classList.remove('is-open'));
     
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/service-worker.js')
-          .then(registration => {
-            console.log('Service Worker registrado com sucesso:', registration.scope);
-          })
-          .catch(error => {
-            console.log('Falha no registro do Service Worker:', error);
-          });
-      });
-    }
+    requestAccessForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const hiveId = document.getElementById('record-id-input').value.trim();
+        if (!hiveId) return;
 
-})();
+        try {
+            const hiveRef = doc(db, "hives", hiveId);
+            const hiveSnap = await getDoc(hiveRef);
+
+            if (!hiveSnap.exists()) {
+                alert("Colmeia não encontrada. Verifique o número digitado.");
+                return;
+            }
+            
+            const ownerId = hiveSnap.data().ownerId;
+
+            if (ownerId === currentUser.uid) {
+                alert("Você já é o dono desta colmeia.");
+                return;
+            }
+
+            const q = query(collection(db, "accessRequests"), where("hiveId", "==", hiveId), where("requesterId", "==", currentUser.uid));
+            const existingRequests = await getDocs(q);
+            if (!existingRequests.empty) {
+                const existingStatus = existingRequests.docs[0].data().status;
+                if (existingStatus === 'pending') {
+                     alert("Você já solicitou acesso a esta colmeia. Aguarde a aprovação.");
+                } else if (existingStatus === 'accepted') {
+                    alert("Você já tem acesso a esta colmeia.");
+                } else {
+                     alert("Sua solicitação anterior foi recusada.");
+                }
+                return;
+            }
+
+            await addDoc(collection(db, "accessRequests"), {
+                requesterId: currentUser.uid,
+                requesterName: currentUser.name || currentUser.email,
+                ownerId: ownerId,
+                hiveId: hiveId,
+                status: 'pending',
+                createdAt: new Date()
+            });
+
+            alert("Solicitação de acesso enviada!");
+            requestAccessModal.classList.remove('is-open');
+            requestAccessForm.reset();
+
+        } catch (error) {
+            console.error("Erro ao enviar solicitação de acesso:", error);
+            alert("Ocorreu um erro ao enviar a sua solicitação. Verifique se tem permissão para esta ação e tente novamente.");
+        }
+    });
+
+    notificationBell.addEventListener('click', () => {
+        notificationDropdown.classList.toggle('hidden');
+    });
+    
+    document.addEventListener('click', async (e) => {
+        const acceptBtn = e.target.closest('.accept-btn');
+        if (acceptBtn) {
+            const { reqid, hiveid, requesterid } = acceptBtn.dataset;
+            await handleAccessRequest(reqid, hiveid, requesterid, 'accepted');
+        }
+         const rejectBtn = e.target.closest('.reject-btn');
+        if (rejectBtn) {
+            const { reqid } = rejectBtn.dataset;
+            await handleAccessRequest(reqid, null, null, 'rejected');
+        }
+    });
+
+    // --- INICIALIZAÇÃO GERAL ---
+    (async () => {
+        await fetchStates();
+        
+        if ('serviceWorker' in navigator) {
+          window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/service-worker.js')
+              .then(registration => {
+                console.log('Service Worker registrado com sucesso:', registration.scope);
+              })
+              .catch(error => {
+                console.log('Falha no registro do Service Worker:', error);
+              });
+          });
+        }
+
+    })();
+});
