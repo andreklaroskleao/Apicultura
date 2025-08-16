@@ -1,4 +1,4 @@
-import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 import { db, currentUser, userHives } from './script.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -157,4 +157,5 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     initializePage();
+
 });
