@@ -142,8 +142,8 @@ let allUserCollections = [];
 let creationMap = null;
 let creationMarker = null;
 let fullMap = null;
-let editMap = null; // Mapa para o modal de edição
-let editMarker = null; // Marcador para o mapa de edição
+let editMap = null;
+let editMarker = null;
 let hiveIcon = null;
 let hiveMarkersLayer = null;
 
@@ -255,7 +255,6 @@ function initializeFullMapView() {
     });
 }
 
-// NOVA FUNÇÃO para inicializar o mapa de edição
 function initializeEditMap(lat, lon) {
     if (!document.getElementById('edit-hive-map-container')) return;
 
@@ -270,7 +269,6 @@ function initializeEditMap(lat, lon) {
             icon: hiveIcon
         }).addTo(editMap);
     }
-    // Garante que o mapa seja renderizado corretamente dentro do modal
     setTimeout(() => editMap.invalidateSize(), 200);
 }
 
@@ -298,11 +296,9 @@ function getWeatherDescription(code) {
 async function fetchCurrentWeather(hiveId, lat, lon) {
     const weatherElement = document.getElementById(`weather-info-${hiveId}`);
     if (!weatherElement) return;
-
     try {
         const response = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
         const data = await response.json();
-
         if (data.current_weather) {
             const temp = data.current_weather.temperature;
             const weatherCode = data.current_weather.weathercode;
@@ -363,15 +359,11 @@ async function getCoordsForCity(city, state) {
         const states = await statesResponse.json();
         const stateObj = states.find(s => s.sigla.toLowerCase() === state.toLowerCase());
         const stateFullName = stateObj ? stateObj.nome : state;
-        
         const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${city}&count=20&language=pt&format=json`);
         const data = await response.json();
-
         if (data.results) {
             const location = data.results.find(res => res.admin1 && res.admin1.toLowerCase() === stateFullName.toLowerCase());
-            if (location) {
-                return { latitude: location.latitude, longitude: location.longitude };
-            }
+            if (location) return { latitude: location.latitude, longitude: location.longitude };
         }
         return null;
     } catch (error) {
@@ -394,12 +386,9 @@ onAuthStateChanged(auth, async (user) => {
         if (userDoc.exists()) {
             if (authError) authError.textContent = '';
             currentUser = { uid: user.uid, email: user.email, ...userDoc.data() };
-            
             if (userInfoDisplay) userInfoDisplay.textContent = currentUser.name ? currentUser.name.split(' ')[0] : currentUser.email;
-
             if (authContainer) authContainer.classList.add('hidden');
             if (appContainer) appContainer.classList.remove('hidden');
-            
             if (adminPanelLink) {
                 if (currentUser.role === 'admin') {
                     adminPanelLink.classList.remove('hidden');
@@ -408,7 +397,6 @@ onAuthStateChanged(auth, async (user) => {
                     adminPanelLink.classList.add('hidden');
                 }
             }
-            
             showView(dashboardView);
             initializeCreationMap(currentUser.latitude || -31.33, currentUser.longitude || -54.10);
             listenToHives(currentUser.uid);
@@ -428,10 +416,8 @@ onAuthStateChanged(auth, async (user) => {
 
 
 // --- GESTÃO DE COLMEIAS E COLETAS (LÓGICA CENTRAL)---
-
 function listenToHives(userId) {
     const q = query(collection(db, "hives"), where("accessibleTo", "array-contains", userId));
-    
     unsubscribeFromHives = onSnapshot(q, async (snapshot) => {
         const hivesPromises = snapshot.docs.map(async (hiveDoc) => {
             const hiveData = { id: hiveDoc.id, ...hiveDoc.data() };
@@ -440,23 +426,18 @@ function listenToHives(userId) {
             hiveData.ownerApiaryName = ownerDoc.exists() ? ownerDoc.data().apiaryName : 'Desconhecido';
             return hiveData;
         });
-
         userHives = await Promise.all(hivesPromises);
         userHives.sort((a, b) => a.id - b.id);
-
         renderHivesTable();
         populateHiveSelects();
         renderCollectionsTable();
-        if (fullMap) {
-            initializeFullMapView();
-        }
+        if (fullMap) initializeFullMapView();
     });
 }
 
 function listenToCollections(userId) {
     const collectionsRef = collection(db, "collections");
     const q = query(collectionsRef, where("accessibleTo", "array-contains", userId), orderBy("data", "desc"));
-
     unsubscribeFromCollections = onSnapshot(q, (snapshot) => {
         allUserCollections = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         renderCollectionsTable();
@@ -473,18 +454,14 @@ function renderCollectionsTable() {
         dataTableBody.innerHTML = '<tr><td colspan="5" class="p-4 text-center text-gray-500">Nenhuma coleta encontrada.</td></tr>';
         return;
     }
-    
     allUserCollections.forEach(collection => {
         const pesoColoniaAbelhas = ((collection.pesoNinhoVazio + collection.pesoQuadrosOperculos + collection.pesoMelgueiraVazia + collection.pesoQuadrosMelgueira) * 1.02) - (collection.pesoNinhoVazio + collection.pesoQuadrosOperculos + collection.pesoMelgueiraVazia + collection.pesoQuadrosMelgueira);
-
         const tr = document.createElement('tr');
         tr.setAttribute('data-id', collection.id);
         tr.setAttribute('data-hiveid', collection.hiveId);
-        
         const hive = userHives.find(h => h.id === collection.hiveId);
         const isOwner = hive ? hive.ownerId === currentUser.uid : false;
         const canEdit = isOwner || (hive && hive.editors && hive.editors.includes(currentUser.uid));
-
         tr.innerHTML = `
             <td class="px-6 py-4 whitespace-nowrap font-medium">#${collection.hiveId}</td>
             <td class="px-6 py-4 whitespace-nowrap">${collection.data || ''}</td>
@@ -494,37 +471,27 @@ function renderCollectionsTable() {
                 <button class="view-btn text-blue-600 hover:text-blue-900" title="Visualizar Detalhes da Coleta" data-id="${collection.id}"><i class="fa-solid fa-eye"></i></button>
                 ${canEdit ? `<button class="edit-btn text-indigo-600 hover:text-indigo-900" title="Editar Coleta" data-id="${collection.id}"><i class="fa-solid fa-pencil"></i></button>` : ''}
                 ${isOwner ? `<button class="delete-collection-btn text-red-600 hover:text-red-900" title="Excluir Coleta" data-id="${collection.id}" data-hiveid="${collection.hiveId}"><i class="fa-solid fa-trash"></i></button>` : ''}
-            </td>
-        `;
+            </td>`;
         dataTableBody.appendChild(tr);
     });
-
     if (collectionFilterInput) collectionFilterInput.dispatchEvent(new Event('input'));
     attachTableActionListeners();
 }
 
 function attachTableActionListeners() {
-    document.querySelectorAll('.view-btn').forEach(btn => {
-        btn.onclick = (e) => showCollectionDetails(e.currentTarget.dataset.id);
-    });
-    document.querySelectorAll('.edit-btn').forEach(btn => {
-        btn.onclick = (e) => setupEditForm(e.currentTarget.dataset.id);
-    });
-    document.querySelectorAll('.delete-collection-btn').forEach(btn => {
-        btn.onclick = (e) => deleteCollection(e.currentTarget.dataset.id, e.currentTarget.dataset.hiveid);
-    });
+    document.querySelectorAll('.view-btn').forEach(btn => { btn.onclick = (e) => showCollectionDetails(e.currentTarget.dataset.id); });
+    document.querySelectorAll('.edit-btn').forEach(btn => { btn.onclick = (e) => setupEditForm(e.currentTarget.dataset.id); });
+    document.querySelectorAll('.delete-collection-btn').forEach(btn => { btn.onclick = (e) => deleteCollection(e.currentTarget.dataset.id, e.currentTarget.dataset.hiveid); });
 }
 
 function renderHivesTable() {
     if (!hivesTableBody) return;
     hivesTableBody.innerHTML = '';
     const myHives = userHives.filter(h => h.ownerId === currentUser.uid);
-
     if (myHives.length === 0) {
         hivesTableBody.innerHTML = '<tr><td colspan="2" class="p-4 text-center text-gray-500">Nenhuma colmeia registrada.</td></tr>';
         return;
     }
-
     myHives.forEach(hive => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -532,17 +499,11 @@ function renderHivesTable() {
             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
                 <button class="view-hive-btn text-blue-600 hover:text-blue-900" data-hiveid="${hive.id}" title="Visualizar / Gerir Colmeia"><i class="fa-solid fa-eye"></i></button>
                 <button class="delete-hive-btn text-red-600 hover:text-red-900" data-hiveid="${hive.id}" title="Excluir Colmeia"><i class="fa-solid fa-trash"></i></button>
-            </td>
-        `;
+            </td>`;
         hivesTableBody.appendChild(tr);
     });
-
-    document.querySelectorAll('.view-hive-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => showHiveDetails(e.currentTarget.dataset.hiveid));
-    });
-    document.querySelectorAll('.delete-hive-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => deleteHive(e.currentTarget.dataset.hiveid));
-    });
+    document.querySelectorAll('.view-hive-btn').forEach(btn => { btn.addEventListener('click', (e) => showHiveDetails(e.currentTarget.dataset.hiveid)); });
+    document.querySelectorAll('.delete-hive-btn').forEach(btn => { btn.addEventListener('click', (e) => deleteHive(e.currentTarget.dataset.hiveid)); });
 }
 
 function populateHiveSelects() {
@@ -551,7 +512,6 @@ function populateHiveSelects() {
         const ownerLabel = hive.ownerId === currentUser.uid ? '' : ` (${hive.ownerApiaryName})`;
         return `<option value="${hive.id}">Colmeia #${hive.id}${ownerLabel}</option>`;
     }).join('');
-    
     hiveIdSelect.innerHTML = `<option value="">Selecione...</option>${optionsHtml}`;
 }
 
@@ -576,7 +536,6 @@ async function deleteHive(hiveId) {
         }
     }
 }
-
 
 async function setupEditForm(collId) {
     const collectionRef = doc(db, "collections", collId);
@@ -643,7 +602,6 @@ function displayDetailMap(hiveId, lat, lng) {
 
     L.marker([lat, lng], { icon: hiveIcon }).addTo(detailMap);
 }
-
 
 async function showHiveDetails(hiveId) {
     const hive = userHives.find(h => h.id === hiveId);
@@ -722,9 +680,8 @@ async function showHiveDetails(hiveId) {
     `;
     viewDetailsModal.classList.add('is-open');
 
-    // --- LÓGICA PARA GERAR O QR CODE (NOVO) ---
     const qrcodeContainer = document.getElementById('qrcode-container');
-    qrcodeContainer.innerHTML = ''; // Limpa o QR Code anterior
+    qrcodeContainer.innerHTML = '';
     new QRCode(qrcodeContainer, {
         text: hive.id,
         width: 120,
@@ -734,7 +691,6 @@ async function showHiveDetails(hiveId) {
         correctLevel : QRCode.CorrectLevel.H
     });
 
-    // --- LÓGICA PARA IMPRIMIR O QR CODE (NOVO) ---
     const printQrBtn = document.getElementById('print-qr-btn');
     printQrBtn.addEventListener('click', () => {
         const printableArea = document.getElementById('hive-details-printable-area').innerHTML;
@@ -743,42 +699,9 @@ async function showHiveDetails(hiveId) {
         document.body.innerHTML = `<div style="display:flex; justify-content:center; align-items:center; height:100vh;">${printableArea}</div>`;
         window.print();
         document.body.innerHTML = originalPage;
-        // Recarrega os listeners, pois a página foi reescrita
         location.reload(); 
     });
 
-
-    if (hive.latitude) {
-        setTimeout(() => {
-            displayDetailMap(hive.id, hive.latitude, hive.longitude);
-            fetchCurrentWeather(hive.id, hive.latitude, hive.longitude);
-        }, 100);
-    }
-}
-    
-    const mapHtml = hive.latitude ? `<div id="hive-detail-map-${hive.id}" style="height: 200px; margin-top: 1rem;"></div>` : '<p class="text-sm text-gray-500 mt-2">Localização não registrada.</p>';
-    const weatherHtml = hive.latitude ? `<p><strong>Clima Atual:</strong> <span id="weather-info-${hive.id}">A carregar... <i class="fa-solid fa-spinner fa-spin"></i></span></p>` : '';
-
-
-    viewModalBody.innerHTML = `
-        <div class="flex justify-between items-start">
-            <div class="space-y-2 mb-4">
-                <p><strong>Tipo de Caixa:</strong> ${hive.boxType || 'Não informado'}</p>
-                <p><strong>Rainha:</strong> ${hive.queen || 'Não informado'}</p>
-                <p><strong>Ano de Instalação:</strong> ${hive.installationYear || 'Não informado'}</p>
-                ${weatherHtml}
-            </div>
-            ${isOwner ? `<button class="open-edit-hive-btn button-primary text-sm" data-hiveid="${hive.id}">
-                <i class="fa-solid fa-pencil mr-2"></i>Editar
-            </button>` : ''}
-        </div>
-        ${mapHtml}
-        <hr class="my-4">
-        <h4 class="font-semibold">Gestão de Acesso</h4>
-        <p class="text-sm text-gray-500 mb-2">Aqui você pode gerenciar quem tem acesso aos dados desta colmeia.</p>
-        ${sharedWithHtml}
-    `;
-    viewDetailsModal.classList.add('is-open');
 
     if (hive.latitude) {
         setTimeout(() => {
@@ -824,7 +747,6 @@ async function showCollectionDetails(collId){
      viewDetailsModal.classList.add('is-open');
 }
 
-
 async function toggleEditPermission(hiveId, userId, canEdit) {
     const hiveRef = doc(db, "hives", hiveId);
     try {
@@ -853,8 +775,8 @@ async function removeShare(hiveId, userId, userName) {
     }
 }
 
-// --- LÓGICA DE EDIÇÃO DA COLMEIA ---
 
+// --- LÓGICA DE EDIÇÃO DA COLMEIA ---
 function openEditHiveModal(hiveId) {
     const hive = userHives.find(h => h.id === hiveId);
     if (!hive) {
@@ -1018,12 +940,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const password = document.getElementById('register-password').value;
         const state = registerStateSelect.value;
         const city = registerCitySelect.value;
-        
         if (!state || !city || !name || !apiaryName) {
             authError.textContent = "Todos os campos são obrigatórios.";
             return;
         }
-
         authError.textContent = 'A obter coordenadas...';
         const coords = await getCoordsForCity(city, state);
         if (!coords) {
@@ -1031,21 +951,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         authError.textContent = '';
-
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
-            
             await setDoc(doc(db, "users", user.uid), {
-                name: name,
-                apiaryName: apiaryName,
-                email: user.email,
-                role: 'user',
-                state: registerStateSelect.options[registerStateSelect.selectedIndex].text,
-                city: city,
-                latitude: coords.latitude,
-                longitude: coords.longitude,
-                createdAt: new Date()
+                name, apiaryName, email: user.email, role: 'user', state: registerStateSelect.options[registerStateSelect.selectedIndex].text, city, latitude: coords.latitude, longitude: coords.longitude, createdAt: new Date()
             });
         } catch (error) {
             authError.textContent = "Falha no registo: " + error.message;
@@ -1056,11 +966,11 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         const email = document.getElementById('login-email').value;
         const password = document.getElementById('login-password').value;
-        authError.textContent = '';
+        if(authError) authError.textContent = '';
         try {
             await signInWithEmailAndPassword(auth, email, password);
         } catch (error) {
-            authError.textContent = "Falha no login: " + error.message;
+            if (authError) authError.textContent = "Falha no login: " + error.message;
         }
     });
 
@@ -1071,41 +981,33 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('profile-apiary').value = currentUser.apiaryName || '';
         document.getElementById('profile-email').textContent = currentUser.email;
         document.getElementById('profile-location').textContent = `${currentUser.city}, ${currentUser.state}`;
-        profileModal.classList.add('is-open');
+        if (profileModal) profileModal.classList.add('is-open');
     });
 
     if (profileForm) profileForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const newName = document.getElementById('profile-name').value.trim();
         const newApiaryName = document.getElementById('profile-apiary').value.trim();
-        
         const dataToUpdate = {};
-        if (newName && newName !== currentUser.name) {
-            dataToUpdate.name = newName;
-        }
-        if (newApiaryName && newApiaryName !== currentUser.apiaryName) {
-            dataToUpdate.apiaryName = newApiaryName;
-        }
-
+        if (newName && newName !== currentUser.name) dataToUpdate.name = newName;
+        if (newApiaryName && newApiaryName !== currentUser.apiaryName) dataToUpdate.apiaryName = newApiaryName;
         if (Object.keys(dataToUpdate).length > 0) {
             try {
                 const userDocRef = doc(db, "users", currentUser.uid);
                 await updateDoc(userDocRef, dataToUpdate);
-                
                 if(dataToUpdate.name) {
                     currentUser.name = newName;
-                     userInfoDisplay.textContent = newName.split(' ')[0];
+                    userInfoDisplay.textContent = newName.split(' ')[0];
                 }
                 if(dataToUpdate.apiaryName) currentUser.apiaryName = newApiaryName;
-
                 alert("Perfil atualizado com sucesso!");
-                profileModal.classList.remove('is-open');
+                if(profileModal) profileModal.classList.remove('is-open');
             } catch (error) {
                 console.error("Erro ao atualizar perfil:", error);
                 alert("Não foi possível atualizar o perfil.");
             }
         } else {
-            profileModal.classList.remove('is-open');
+            if (profileModal) profileModal.classList.remove('is-open');
         }
     });
 
@@ -1118,34 +1020,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const boxType = document.getElementById('hive-box-type').value;
         const queen = document.getElementById('hive-queen').value.trim();
         const installationYear = document.getElementById('hive-installation-year').value;
-
         if (!newHiveId || !boxType || !queen || !installationYear) {
             alert("Todos os campos para adicionar a colmeia são obrigatórios.");
             return;
         }
-
         const { lat, lng } = creationMarker.getLatLng();
-
         try {
             const hiveRef = doc(db, "hives", newHiveId);
-            
             await setDoc(hiveRef, {
-                ownerId: currentUser.uid,
-                createdAt: new Date(),
-                accessibleTo: [currentUser.uid],
-                editors: [],
-                boxType: boxType,
-                queen: queen,
-                installationYear: parseInt(installationYear),
-                latitude: lat,
-                longitude: lng
+                ownerId: currentUser.uid, createdAt: new Date(), accessibleTo: [currentUser.uid], editors: [], boxType, queen, installationYear: parseInt(installationYear), latitude: lat, longitude: lng
             });
-
             hiveForm.reset();
             initializeCreationMap(currentUser.latitude, currentUser.longitude);
-            
             console.log(`Colmeia #${newHiveId} criada com sucesso.`);
-
         } catch (error) {
             console.error("Erro ao adicionar colmeia:", error);
             alert("Ocorreu um erro ao criar a colmeia. A causa mais provável é que este N° já existe.");
@@ -1155,35 +1042,19 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dataForm) dataForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         if (!currentUser) return;
-        
         const hiveId = hiveIdSelect.value;
         if (!hiveId) {
             alert("Por favor, selecione uma colmeia.");
             return;
         }
-
         const hive = userHives.find(h => h.id === hiveId);
         if (!hive) {
             alert("Colmeia selecionada inválida.");
             return;
         }
-
         const collectionData = {
-            hiveId: hiveId,
-            data: document.getElementById('data').value,
-            ownerId: hive.ownerId,
-            accessibleTo: hive.accessibleTo,
-            editors: hive.editors,
-            lastUpdatedAt: new Date(),
-            numeroColeta: parseInt(document.getElementById('numeroColeta').value),
-            numeroMelgueiras: parseInt(document.getElementById('numeroMelgueiras').value),
-            pesoNinhoVazio: parseFloat(document.getElementById('pesoNinhoVazio').value),
-            pesoQuadrosOperculos: parseFloat(document.getElementById('pesoQuadrosOperculos').value),
-            pesoMelgueiraVazia: parseFloat(document.getElementById('pesoMelgueiraVazia').value),
-            pesoQuadrosMelgueira: parseFloat(document.getElementById('pesoQuadrosMelgueira').value),
-            observacoes: document.getElementById('observacoes').value,
+            hiveId, data: document.getElementById('data').value, ownerId: hive.ownerId, accessibleTo: hive.accessibleTo, editors: hive.editors, lastUpdatedAt: new Date(), numeroColeta: parseInt(document.getElementById('numeroColeta').value), numeroMelgueiras: parseInt(document.getElementById('numeroMelgueiras').value), pesoNinhoVazio: parseFloat(document.getElementById('pesoNinhoVazio').value), pesoQuadrosOperculos: parseFloat(document.getElementById('pesoQuadrosOperculos').value), pesoMelgueiraVazia: parseFloat(document.getElementById('pesoMelgueiraVazia').value), pesoQuadrosMelgueira: parseFloat(document.getElementById('pesoQuadrosMelgueira').value), observacoes: document.getElementById('observacoes').value,
         };
-
         const collectionId = collectionIdInput.value;
         try {
             if (collectionId) {
@@ -1194,7 +1065,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 collectionData.createdAt = new Date();
                 await addDoc(collection(db, "collections"), collectionData);
             }
-            
             resetForm();
         } catch (error) {
             console.error("Erro ao salvar dados da coleta:", error);
@@ -1207,7 +1077,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (collectionFilterInput) collectionFilterInput.addEventListener('input', (e) => {
         const searchTerm = e.target.value.toLowerCase();
         const rows = dataTableBody.querySelectorAll('tr');
-
         rows.forEach(row => {
             const hiveId = row.dataset.hiveid;
             if (hiveId && hiveId.toLowerCase().startsWith(searchTerm)) {
@@ -1220,7 +1089,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (viewModalCloseBtn) viewModalCloseBtn.addEventListener('click', () => viewDetailsModal.classList.remove('is-open'));
     if (viewModalCloseBtn2) viewModalCloseBtn2.addEventListener('click', () => viewDetailsModal.classList.remove('is-open'));
-
     if (viewModalBody) viewModalBody.addEventListener('click', (e) => {
         const editToggle = e.target.closest('.edit-toggle');
         if (editToggle) {
@@ -1228,14 +1096,12 @@ document.addEventListener('DOMContentLoaded', () => {
             toggleEditPermission(hiveid, userid, editToggle.checked);
             return; 
         }
-
         const removeBtn = e.target.closest('.remove-share-btn');
         if (removeBtn) {
             const { hiveid, userid, username } = removeBtn.dataset;
             removeShare(hiveid, userid, username);
             return;
         }
-
         const openEditBtn = e.target.closest('.open-edit-hive-btn');
         if(openEditBtn){
             const { hiveid } = openEditBtn.dataset;
@@ -1246,9 +1112,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (editHiveForm) editHiveForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const hiveId = editHiveIdInput.value;
-        
         const { lat, lng } = editMarker.getLatLng();
-
         const dataToUpdate = {
             boxType: document.getElementById('edit-hive-box-type').value,
             queen: document.getElementById('edit-hive-queen').value.trim(),
@@ -1256,12 +1120,10 @@ document.addEventListener('DOMContentLoaded', () => {
             latitude: lat,
             longitude: lng
         };
-
         if (!dataToUpdate.boxType || !dataToUpdate.queen || !dataToUpdate.installationYear) {
             alert("Todos os campos são obrigatórios.");
             return;
         }
-
         try {
             const hiveRef = doc(db, "hives", hiveId);
             await updateDoc(hiveRef, dataToUpdate);
@@ -1283,50 +1145,33 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         const hiveId = document.getElementById('record-id-input').value.trim();
         if (!hiveId) return;
-
         try {
             const hiveRef = doc(db, "hives", hiveId);
             const hiveSnap = await getDoc(hiveRef);
-
             if (!hiveSnap.exists()) {
                 alert("Colmeia não encontrada. Verifique o número digitado.");
                 return;
             }
-            
             const ownerId = hiveSnap.data().ownerId;
-
             if (ownerId === currentUser.uid) {
                 alert("Você já é o dono desta colmeia.");
                 return;
             }
-
             const q = query(collection(db, "accessRequests"), where("hiveId", "==", hiveId), where("requesterId", "==", currentUser.uid));
             const existingRequests = await getDocs(q);
             if (!existingRequests.empty) {
                 const existingStatus = existingRequests.docs[0].data().status;
-                if (existingStatus === 'pending') {
-                     alert("Você já solicitou acesso a esta colmeia. Aguarde a aprovação.");
-                } else if (existingStatus === 'accepted') {
-                    alert("Você já tem acesso a esta colmeia.");
-                } else {
-                     alert("Sua solicitação anterior foi recusada.");
-                }
+                if (existingStatus === 'pending') alert("Você já solicitou acesso a esta colmeia. Aguarde a aprovação.");
+                else if (existingStatus === 'accepted') alert("Você já tem acesso a esta colmeia.");
+                else alert("Sua solicitação anterior foi recusada.");
                 return;
             }
-
             await addDoc(collection(db, "accessRequests"), {
-                requesterId: currentUser.uid,
-                requesterName: currentUser.name || currentUser.email,
-                ownerId: ownerId,
-                hiveId: hiveId,
-                status: 'pending',
-                createdAt: new Date()
+                requesterId: currentUser.uid, requesterName: currentUser.name || currentUser.email, ownerId, hiveId, status: 'pending', createdAt: new Date()
             });
-
             alert("Solicitação de acesso enviada!");
             requestAccessModal.classList.remove('is-open');
             requestAccessForm.reset();
-
         } catch (error) {
             console.error("Erro ao enviar solicitação de acesso:", error);
             alert("Ocorreu um erro ao enviar a sua solicitação. Verifique se tem permissão para esta ação e tente novamente.");
@@ -1343,7 +1188,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const { reqid, hiveid, requesterid } = acceptBtn.dataset;
             await handleAccessRequest(reqid, hiveid, requesterid, 'accepted');
         }
-         const rejectBtn = e.target.closest('.reject-btn');
+        const rejectBtn = e.target.closest('.reject-btn');
         if (rejectBtn) {
             const { reqid } = rejectBtn.dataset;
             await handleAccessRequest(reqid, null, null, 'rejected');
@@ -1353,19 +1198,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- INICIALIZAÇÃO GERAL ---
     (async () => {
         await fetchStates();
-        
         if ('serviceWorker' in navigator) {
           window.addEventListener('load', () => {
             navigator.serviceWorker.register('/service-worker.js')
-              .then(registration => {
-                console.log('Service Worker registrado com sucesso:', registration.scope);
-              })
-              .catch(error => {
-                console.log('Falha no registro do Service Worker:', error);
-              });
+              .then(registration => console.log('Service Worker registrado com sucesso:', registration.scope))
+              .catch(error => console.log('Falha no registro do Service Worker:', error));
           });
         }
-
     })();
 });
-
