@@ -7,7 +7,6 @@ const reportHiveSelect = document.getElementById('report-hive-select');
 const reportResultsContainer = document.getElementById('report-results-container');
 const reportSummary = document.getElementById('report-summary');
 const reportTableBody = document.getElementById('report-table-body');
-const printReportBtn = document.getElementById('print-report-btn');
 const reportTitle = document.getElementById('report-title');
 
 
@@ -135,6 +134,11 @@ const displayReport = (collections, hive, start, end) => {
 };
 
 // Listener para o botão de imprimir
-printReportBtn.addEventListener('click', () => {
-    window.print();
+document.addEventListener('DOMContentLoaded', () => {
+    const printReportBtn = document.getElementById('print-report-btn');
+    if (printReportBtn) {
+        printReportBtn.addEventListener('click', () => {
+            window.print();
+        });
+    }
 });
