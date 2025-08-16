@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const progressBar = document.getElementById('coleta-progress');
     const hiveSelect = document.getElementById('hive-id-select');
     const dateInput = document.getElementById('data');
-    const todayBtn = document.getElementById('today-btn'); // Botão "Hoje"
+    const todayBtn = document.getElementById('today-btn');
 
     let currentStep = 0;
     const totalSteps = formSteps.length;
@@ -151,6 +151,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const scanQrBtn = document.getElementById('scan-qr-btn');
     const cancelScanBtn = document.getElementById('cancel-scan-btn');
     const qrReaderDiv = document.getElementById('qr-reader');
+    const qrSuccessMessage = document.getElementById('qr-success-message');
+    const qrSuccessText = document.getElementById('qr-success-text');
     
     if (scanQrBtn && qrReaderDiv && typeof Html5Qrcode !== 'undefined') {
         const html5QrCode = new Html5Qrcode("qr-reader");
@@ -162,7 +164,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if(cancelScanBtn) cancelScanBtn.classList.add('hidden');
             }).catch(err => {
                 console.error("Falha ao parar o leitor de QR Code.", err);
-                // Mesmo com erro, garante que a interface seja restaurada
                 qrReaderDiv.style.display = 'none';
                 scanQrBtn.style.display = 'block';
                 if(cancelScanBtn) cancelScanBtn.classList.add('hidden');
@@ -175,15 +176,25 @@ document.addEventListener('DOMContentLoaded', () => {
             cancelScanBtn.classList.remove('hidden');
 
             const qrCodeSuccessCallback = (decodedText, decodedResult) => {
+                stopScanner();
                 const optionExists = Array.from(hiveSelect.options).some(opt => opt.value === decodedText);
+
                 if (optionExists) {
                     hiveSelect.value = decodedText;
-                    alert(`Colmeia #${decodedText} selecionada!`);
-                    if (nextBtn) nextBtn.click(); 
+                    
+                    qrSuccessText.textContent = `Colmeia #${decodedText} selecionada!`;
+                    qrSuccessMessage.classList.remove('hidden');
+                    qrSuccessMessage.classList.add('visible');
+
+                    setTimeout(() => {
+                        qrSuccessMessage.classList.remove('visible');
+                        if (nextBtn) nextBtn.click();
+                        setTimeout(() => qrSuccessMessage.classList.add('hidden'), 500);
+                    }, 2000);
+
                 } else {
                     alert(`Erro: Colmeia com ID "${decodedText}" não encontrada.`);
                 }
-                stopScanner();
             };
 
             const config = { fps: 10, qrbox: { width: 250, height: 250 } };
@@ -251,7 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if(statusElement) statusElement.textContent = 'Erro ao ouvir.';
             }
         };
-
+        
         recognition.onresult = (event) => {
             const transcript = event.results[0][0].transcript;
             if (activeMicButton) {
