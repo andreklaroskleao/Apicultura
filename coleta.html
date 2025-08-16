@@ -13,6 +13,8 @@
     
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="coleta.css">
+
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 <body>
     <div id="main-container" class="coleta-container">
@@ -36,6 +38,11 @@
                     <div class="form-step active">
                         <label for="hive-id-select" class="form-label-coleta">Qual colmeia você está visitando?</label>
                         <select id="hive-id-select" required class="form-input-coleta"></select>
+                        
+                        <button type="button" id="scan-qr-btn" class="button-primary w-full mt-4">
+                            <i class="fa-solid fa-qrcode mr-2"></i>Escanear QR Code
+                        </button>
+                        <div id="qr-reader" class="mt-4" style="width: 100%; display: none;"></div>
                     </div>
 
                     <div class="form-step">
