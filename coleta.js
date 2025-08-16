@@ -18,16 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const totalSteps = formSteps.length;
     let collectionData = {}; // Objeto para armazenar os dados
 
-    // --- LÓGICA DE NAVEGAÇÃO (sem alterações) ---
-    const populateHiveSelect = () => { /* ...código original... */ };
-    const setCurrentDate = () => { /* ...código original... */ };
-    const updateFormStep = () => { /* ...código original... */ };
-    const updateProgressBar = () => { /* ...código original... */ };
-    const updateNavigationButtons = () => { /* ...código original... */ };
-    const validateStep = () => { /* ...código original... */ };
-    const storeStepData = () => { /* ...código original... */ };
-    
-    // (As funções acima permanecem exatamente as mesmas da versão anterior)
+    // --- LÓGICA DE NAVEGAÇÃO ---
     const populateHiveSelect = () => {
         if (!hiveSelect) return;
         if (userHives.length === 0) {
@@ -40,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
         hiveSelect.innerHTML = `<option value="">Selecione...</option>${optionsHtml}`;
     };
+
     const setCurrentDate = () => {
         if (!dateInput) return;
         const today = new Date();
@@ -48,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const day = String(today.getDate()).padStart(2, '0');
         dateInput.value = `${year}-${month}-${day}`;
     };
+
     const updateFormStep = () => {
         formSteps.forEach((step, index) => {
             step.classList.toggle('active', index === currentStep);
@@ -55,17 +48,20 @@ document.addEventListener('DOMContentLoaded', () => {
         updateProgressBar();
         updateNavigationButtons();
     };
+
     const updateProgressBar = () => {
         if (!progressBar) return;
         const progress = (currentStep / (totalSteps - 1)) * 100;
         progressBar.style.width = `${progress}%`;
     };
+
     const updateNavigationButtons = () => {
         if (!prevBtn || !nextBtn || !saveBtn) return;
         prevBtn.classList.toggle('hidden', currentStep === 0);
         nextBtn.classList.toggle('hidden', currentStep === totalSteps - 1);
         saveBtn.classList.toggle('hidden', currentStep !== totalSteps - 1);
     };
+
     const validateStep = () => {
         const currentInput = formSteps[currentStep].querySelector('input, select, textarea');
         if (currentInput && currentInput.required && !currentInput.value) {
@@ -74,6 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         return true;
     };
+
     const storeStepData = () => {
         const currentInput = formSteps[currentStep].querySelector('input, select, textarea');
         if (currentInput) {
@@ -103,10 +100,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- LÓGICA DE SALVAMENTO (sem alterações) ---
+    // --- LÓGICA DE SALVAMENTO ---
     if (saveBtn) {
         saveBtn.addEventListener('click', async () => {
-            // ... (código original de salvamento permanece o mesmo)
             if (!currentUser) {
                 alert("Erro: Usuário não autenticado.");
                 return;
@@ -148,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- LÓGICA DE TRANSCRIÇÃO DE VOZ (ATUALIZADA E GENERALIZADA) ---
+    // --- LÓGICA DE TRANSCRIÇÃO DE VOZ ---
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const micButtons = document.querySelectorAll('.mic-btn-input');
 
@@ -163,7 +159,6 @@ document.addEventListener('DOMContentLoaded', () => {
         micButtons.forEach(button => {
             button.addEventListener('click', () => {
                 const targetId = button.dataset.target;
-                const targetInput = document.getElementById(targetId);
                 const statusElement = document.querySelector(`.mic-status-text[data-status-for="${targetId}"]`);
                 
                 if (activeMicButton) {
@@ -172,7 +167,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 activeMicButton = button;
-                recognition.start();
+                try {
+                    recognition.start();
+                } catch(error) {
+                    console.error("Erro ao tentar iniciar o reconhecimento de voz. Pode já estar ativo.", error);
+                    activeMicButton = null; // Reseta o botão ativo
+                }
 
                 recognition.onstart = () => {
                     button.classList.add('listening');
