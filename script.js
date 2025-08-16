@@ -654,22 +654,20 @@ async function showHiveDetails(hiveId) {
 
 
     viewModalBody.innerHTML = `
-        <div id="hive-details-printable-area">
-            <div class="flex justify-between items-start">
-                <div class="space-y-2 mb-4">
-                    <p><strong>Tipo de Caixa:</strong> ${hive.boxType || 'Não informado'}</p>
-                    <p><strong>Rainha:</strong> ${hive.queen || 'Não informado'}</p>
-                    <p><strong>Ano de Instalação:</strong> ${hive.installationYear || 'Não informado'}</p>
-                    ${weatherHtml}
-                </div>
-                
-                <div class="text-center">
-                    <div id="qrcode-container" class="p-2 bg-white inline-block"></div>
-                    <p class="text-xs font-bold mt-1">Colmeia #${hive.id}</p>
-                </div>
+        <div class="flex justify-between items-start">
+            <div class="space-y-2 mb-4">
+                <p><strong>Tipo de Caixa:</strong> ${hive.boxType || 'Não informado'}</p>
+                <p><strong>Rainha:</strong> ${hive.queen || 'Não informado'}</p>
+                <p><strong>Ano de Instalação:</strong> ${hive.installationYear || 'Não informado'}</p>
+                ${weatherHtml}
+            </div>
+            
+            <div class="text-center">
+                <div id="qrcode-container" class="p-2 bg-white inline-block"></div>
+                <p class="text-xs font-bold mt-1">Colmeia #${hive.id}</p>
             </div>
         </div>
-
+        
         <button id="print-qr-btn" class="button-secondary w-full mt-4"><i class="fa-solid fa-print mr-2"></i>Imprimir Etiqueta</button>
         
         ${mapHtml}
@@ -680,6 +678,7 @@ async function showHiveDetails(hiveId) {
     `;
     viewDetailsModal.classList.add('is-open');
 
+    // --- LÓGICA PARA GERAR O QR CODE (sem alterações) ---
     const qrcodeContainer = document.getElementById('qrcode-container');
     qrcodeContainer.innerHTML = '';
     new QRCode(qrcodeContainer, {
@@ -691,17 +690,60 @@ async function showHiveDetails(hiveId) {
         correctLevel : QRCode.CorrectLevel.H
     });
 
+    // --- NOVA LÓGICA DE IMPRESSÃO (CORRIGIDA) ---
     const printQrBtn = document.getElementById('print-qr-btn');
     printQrBtn.addEventListener('click', () => {
-        const printableArea = document.getElementById('hive-details-printable-area').innerHTML;
-        const originalPage = document.body.innerHTML;
-        
-        document.body.innerHTML = `<div style="display:flex; justify-content:center; align-items:center; height:100vh;">${printableArea}</div>`;
-        window.print();
-        document.body.innerHTML = originalPage;
-        location.reload(); 
-    });
+        const canvas = qrcodeContainer.querySelector('canvas');
+        if (!canvas) {
+            alert("Erro: Não foi possível encontrar a imagem do QR Code.");
+            return;
+        }
 
+        // Converte o desenho do QR Code para uma imagem real
+        const imageUrl = canvas.toDataURL("image/png");
+
+        // Conteúdo da etiqueta, formatado para mini impressoras
+        const printContent = `
+            <html>
+                <head>
+                    <title>Etiqueta Colmeia ${hive.id}</title>
+                    <style>
+                        @media print {
+                            @page { margin: 0; }
+                            body { 
+                                margin: 0; 
+                                font-family: sans-serif; 
+                                text-align: center;
+                                padding: 10px;
+                            }
+                            img { max-width: 80%; }
+                            h3 { margin: 5px 0; font-size: 14px; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h3>Colmeia #${hive.id}</h3>
+                    <img src="${imageUrl}">
+                </body>
+            </html>
+        `;
+
+        // Cria um iframe invisível para não bagunçar a página principal
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        document.body.appendChild(iframe);
+
+        // Escreve o conteúdo da etiqueta no iframe e chama a impressão
+        iframe.contentDocument.write(printContent);
+        iframe.contentDocument.close();
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+
+        // Remove o iframe após a impressão
+        setTimeout(() => {
+            document.body.removeChild(iframe);
+        }, 1000);
+    });
 
     if (hive.latitude) {
         setTimeout(() => {
@@ -1207,3 +1249,4 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     })();
 });
+
