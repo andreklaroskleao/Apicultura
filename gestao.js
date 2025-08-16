@@ -21,6 +21,13 @@ let allExtractions = [];
 let allCosts = [];
 let allSales = [];
 let unsubscribeInventory, unsubscribeExtractions, unsubscribeCosts, unsubscribeSales;
+let currentStockUpdate = {};
+const defaultItems = {
+    'melgueiras': 'Melgueiras',
+    'quadros': 'Quadros de Ninho/Melgueira',
+    'cera': 'Cera Alveolada (kg)',
+    'epis': 'EPIs (Unidades)'
+};
 
 // --- INICIALIZAÇÃO ---
 export const initializeManagementPage = () => {
@@ -60,25 +67,6 @@ const calculateFinancialSummary = () => {
 };
 
 // --- VENDAS ---
-salesForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const saleData = {
-        date: document.getElementById('sale-date').value,
-        volume: parseFloat(document.getElementById('sale-volume').value),
-        pricePerKg: parseFloat(document.getElementById('sale-price').value),
-        createdAt: new Date()
-    };
-    saleData.total = saleData.volume * saleData.pricePerKg;
-
-    try {
-        await addDoc(collection(db, `users/${currentUser.uid}/sales`), saleData);
-        salesForm.reset();
-    } catch (error) {
-        console.error("Erro ao registar venda:", error);
-        alert("Falha ao registar a venda.");
-    }
-});
-
 const listenToSales = () => {
     const salesCollection = collection(db, `users/${currentUser.uid}/sales`);
     unsubscribeSales = onSnapshot(salesCollection, (snapshot) => {
@@ -99,35 +87,7 @@ const listenToSales = () => {
     });
 };
 
-salesTableBody.addEventListener('click', async (e) => {
-    if (e.target.closest('.delete-sale-btn')) {
-        const docId = e.target.closest('.delete-sale-btn').dataset.id;
-        if (confirm("Tem a certeza que deseja apagar este registo de venda?")) {
-            await deleteDoc(doc(db, `users/${currentUser.uid}/sales`, docId));
-        }
-    }
-});
-
-
 // --- CUSTOS ---
-costsForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const costData = {
-        date: document.getElementById('cost-date').value,
-        description: document.getElementById('cost-description').value,
-        value: parseFloat(document.getElementById('cost-value').value),
-        createdAt: new Date()
-    };
-
-    try {
-        await addDoc(collection(db, `users/${currentUser.uid}/costs`), costData);
-        costsForm.reset();
-    } catch (error) {
-        console.error("Erro ao registar custo:", error);
-        alert("Falha ao registar o custo.");
-    }
-});
-
 const listenToCosts = () => {
     const costsCollection = collection(db, `users/${currentUser.uid}/costs`);
     unsubscribeCosts = onSnapshot(costsCollection, (snapshot) => {
@@ -147,38 +107,7 @@ const listenToCosts = () => {
     });
 };
 
-costsTableBody.addEventListener('click', async (e) => {
-    if (e.target.closest('.delete-cost-btn')) {
-        const docId = e.target.closest('.delete-cost-btn').dataset.id;
-        if (confirm("Tem a certeza que deseja apagar este registo de custo?")) {
-            await deleteDoc(doc(db, `users/${currentUser.uid}/costs`, docId));
-        }
-    }
-});
-
-
 // --- CONTROLE DE EXTRAÇÃO ---
-extractionForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if (!currentUser) return;
-
-    const extractionData = {
-        date: document.getElementById('extraction-date').value,
-        volume: parseFloat(document.getElementById('extraction-volume').value),
-        destination: document.getElementById('extraction-destination').value,
-        notes: document.getElementById('extraction-notes').value,
-        createdAt: new Date()
-    };
-
-    try {
-        await addDoc(collection(db, `users/${currentUser.uid}/extractions`), extractionData);
-        extractionForm.reset();
-    } catch (error) {
-        console.error("Erro ao adicionar registo de extração:", error);
-        alert("Falha ao salvar o registo.");
-    }
-});
-
 const listenToExtractions = () => {
     const extractionsCollection = collection(db, `users/${currentUser.uid}/extractions`);
     unsubscribeExtractions = onSnapshot(extractionsCollection, (snapshot) => {
@@ -201,23 +130,7 @@ const listenToExtractions = () => {
     });
 };
 
-extractionTableBody.addEventListener('click', async (e) => {
-    if (e.target.closest('.delete-extraction-btn')) {
-        const docId = e.target.closest('.delete-extraction-btn').dataset.id;
-        if (confirm("Tem a certeza que deseja apagar este registo de extração?")) {
-            await deleteDoc(doc(db, `users/${currentUser.uid}/extractions`, docId));
-        }
-    }
-});
-
 // --- GESTÃO DE MATERIAIS ---
-const defaultItems = {
-    'melgueiras': 'Melgueiras',
-    'quadros': 'Quadros de Ninho/Melgueira',
-    'cera': 'Cera Alveolada (kg)',
-    'epis': 'EPIs (Unidades)'
-};
-
 const listenToInventory = () => {
     const inventoryRef = doc(db, `users/${currentUser.uid}/inventory`, 'stock');
     unsubscribeInventory = onSnapshot(inventoryRef, (docSnap) => {
@@ -244,14 +157,6 @@ const renderInventory = () => {
     });
 };
 
-inventoryList.addEventListener('click', (e) => {
-    if (e.target.classList.contains('stock-change-btn')) {
-        const { item, action } = e.target.dataset;
-        openStockModal(item, action);
-    }
-});
-
-let currentStockUpdate = {};
 const openStockModal = (item, action) => {
     currentStockUpdate = { item, action };
     stockModalTitle.textContent = `${action === 'add' ? 'Adicionar ao' : 'Remover do'} Estoque de ${defaultItems[item]}`;
@@ -259,33 +164,147 @@ const openStockModal = (item, action) => {
     stockModal.classList.add('is-open');
 };
 
-stockForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const quantity = parseInt(document.getElementById('stock-quantity').value);
-    if (isNaN(quantity) || quantity <= 0) {
-        alert("Por favor, insira uma quantidade válida.");
-        return;
+// --- LISTENERS DE EVENTOS (AGORA DENTRO DO DOMCONTENTLOADED) ---
+document.addEventListener('DOMContentLoaded', () => {
+
+    if (salesForm) {
+        salesForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const saleData = {
+                date: document.getElementById('sale-date').value,
+                volume: parseFloat(document.getElementById('sale-volume').value),
+                pricePerKg: parseFloat(document.getElementById('sale-price').value),
+                createdAt: new Date()
+            };
+            saleData.total = saleData.volume * saleData.pricePerKg;
+
+            try {
+                await addDoc(collection(db, `users/${currentUser.uid}/sales`), saleData);
+                salesForm.reset();
+            } catch (error) {
+                console.error("Erro ao registar venda:", error);
+                alert("Falha ao registar a venda.");
+            }
+        });
     }
 
-    const { item, action } = currentStockUpdate;
-    const currentQuantity = currentInventory[item] || 0;
-    const newQuantity = action === 'add' ? currentQuantity + quantity : currentQuantity - quantity;
-
-    if (newQuantity < 0) {
-        alert("A quantidade em estoque não pode ser negativa.");
-        return;
+    if (salesTableBody) {
+        salesTableBody.addEventListener('click', async (e) => {
+            if (e.target.closest('.delete-sale-btn')) {
+                const docId = e.target.closest('.delete-sale-btn').dataset.id;
+                if (confirm("Tem a certeza que deseja apagar este registo de venda?")) {
+                    await deleteDoc(doc(db, `users/${currentUser.uid}/sales`, docId));
+                }
+            }
+        });
     }
 
-    try {
-        const inventoryRef = doc(db, `users/${currentUser.uid}/inventory`, 'stock');
-        await setDoc(inventoryRef, { [item]: newQuantity }, { merge: true });
-        stockModal.classList.remove('is-open');
-    } catch (error) {
-        console.error("Erro ao atualizar o estoque:", error);
-        alert("Falha ao atualizar o estoque.");
-    }
-});
+    if (costsForm) {
+        costsForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const costData = {
+                date: document.getElementById('cost-date').value,
+                description: document.getElementById('cost-description').value,
+                value: parseFloat(document.getElementById('cost-value').value),
+                createdAt: new Date()
+            };
 
-stockModalCancel.addEventListener('click', () => {
-    stockModal.classList.remove('is-open');
+            try {
+                await addDoc(collection(db, `users/${currentUser.uid}/costs`), costData);
+                costsForm.reset();
+            } catch (error) {
+                console.error("Erro ao registar custo:", error);
+                alert("Falha ao registar o custo.");
+            }
+        });
+    }
+
+    if (costsTableBody) {
+        costsTableBody.addEventListener('click', async (e) => {
+            if (e.target.closest('.delete-cost-btn')) {
+                const docId = e.target.closest('.delete-cost-btn').dataset.id;
+                if (confirm("Tem a certeza que deseja apagar este registo de custo?")) {
+                    await deleteDoc(doc(db, `users/${currentUser.uid}/costs`, docId));
+                }
+            }
+        });
+    }
+
+    if (extractionForm) {
+        extractionForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentUser) return;
+
+            const extractionData = {
+                date: document.getElementById('extraction-date').value,
+                volume: parseFloat(document.getElementById('extraction-volume').value),
+                destination: document.getElementById('extraction-destination').value,
+                notes: document.getElementById('extraction-notes').value,
+                createdAt: new Date()
+            };
+
+            try {
+                await addDoc(collection(db, `users/${currentUser.uid}/extractions`), extractionData);
+                extractionForm.reset();
+            } catch (error) {
+                console.error("Erro ao adicionar registo de extração:", error);
+                alert("Falha ao salvar o registo.");
+            }
+        });
+    }
+
+    if (extractionTableBody) {
+        extractionTableBody.addEventListener('click', async (e) => {
+            if (e.target.closest('.delete-extraction-btn')) {
+                const docId = e.target.closest('.delete-extraction-btn').dataset.id;
+                if (confirm("Tem a certeza que deseja apagar este registo de extração?")) {
+                    await deleteDoc(doc(db, `users/${currentUser.uid}/extractions`, docId));
+                }
+            }
+        });
+    }
+    
+    if (inventoryList) {
+        inventoryList.addEventListener('click', (e) => {
+            if (e.target.classList.contains('stock-change-btn')) {
+                const { item, action } = e.target.dataset;
+                openStockModal(item, action);
+            }
+        });
+    }
+    
+    if (stockForm) {
+        stockForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const quantity = parseInt(document.getElementById('stock-quantity').value);
+            if (isNaN(quantity) || quantity <= 0) {
+                alert("Por favor, insira uma quantidade válida.");
+                return;
+            }
+
+            const { item, action } = currentStockUpdate;
+            const currentQuantity = currentInventory[item] || 0;
+            const newQuantity = action === 'add' ? currentQuantity + quantity : currentQuantity - quantity;
+
+            if (newQuantity < 0) {
+                alert("A quantidade em estoque não pode ser negativa.");
+                return;
+            }
+
+            try {
+                const inventoryRef = doc(db, `users/${currentUser.uid}/inventory`, 'stock');
+                await setDoc(inventoryRef, { [item]: newQuantity }, { merge: true });
+                stockModal.classList.remove('is-open');
+            } catch (error)
+                console.error("Erro ao atualizar o estoque:", error);
+                alert("Falha ao atualizar o estoque.");
+            }
+        });
+    }
+
+    if (stockModalCancel) {
+        stockModalCancel.addEventListener('click', () => {
+            stockModal.classList.remove('is-open');
+        });
+    }
 });
