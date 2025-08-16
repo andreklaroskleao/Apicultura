@@ -1,0 +1,114 @@
+/* Estilos específicos para a página de coleta em campo */
+
+.coleta-container {
+    background-color: var(--color-bg);
+}
+
+.coleta-main {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem;
+    flex-grow: 1;
+    min-height: calc(100vh - 80px); /* Altura da tela menos o header */
+}
+
+#coleta-wizard-card {
+    width: 100%;
+    max-width: 600px;
+    padding: 2rem;
+}
+
+#coleta-progress-bar {
+    width: 100%;
+    height: 8px;
+    background-color: var(--color-border);
+    border-radius: 4px;
+    margin-bottom: 2.5rem;
+    overflow: hidden;
+}
+
+#coleta-progress {
+    width: 0%;
+    height: 100%;
+    background-color: var(--color-primary);
+    transition: width 0.3s ease-in-out;
+}
+
+.form-step {
+    display: none;
+    text-align: center;
+    animation: fadeIn 0.5s;
+}
+
+.form-step.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.form-label-coleta {
+    display: block;
+    font-size: 1.75rem; /* Tamanho grande para fácil leitura */
+    font-weight: 600;
+    color: var(--color-text-dark);
+    margin-bottom: 2rem;
+}
+
+.form-input-coleta {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.5rem; /* Inputs maiores */
+    text-align: center;
+    background-color: #fff;
+    border: 2px solid var(--color-border);
+    border-radius: 0.5rem;
+    transition: all 0.2s ease-in-out;
+}
+
+.form-input-coleta:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 4px #fbbF77;
+}
+
+/* Navegação */
+.navigation-buttons {
+    margin-top: 2.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+.navigation-buttons button {
+    padding: 1rem 1.5rem; /* Botões grandes */
+    font-size: 1.1rem;
+    font-weight: 700;
+    border-radius: 0.5rem;
+    flex-grow: 1;
+}
+
+.navigation-buttons i {
+    margin-right: 0.5rem;
+    margin-left: 0.5rem;
+}
+
+.final-step-message {
+    font-size: 1.1rem;
+    color: var(--color-text-light);
+    margin-bottom: 2rem;
+}
+
+.final-step-icon {
+    font-size: 6rem;
+    color: var(--color-success);
+}
+
+/* Esconde o botão 'Anterior' no primeiro passo */
+#prev-btn.hidden {
+    visibility: hidden;
+}
