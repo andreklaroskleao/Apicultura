@@ -215,9 +215,8 @@ document.addEventListener('DOMContentLoaded', () => {
             'cinco': '5', 'seis': '6', 'sete': '7', 'oito': '8', 'nove': '9', 'dez': '10',
             'vírgula': '.', 'ponto': '.'
         };
-        const words = text.toLowerCase().split(' ');
-        const resultWords = words.map(word => wordMap[word] || word);
-        return resultWords.join(' ');
+        // Converte a frase para minúsculas e aplica o mapeamento de palavras
+        return text.toLowerCase().split(' ').map(word => wordMap[word] || word).join(' ');
     };
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -242,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 try {
                     recognition.start();
                 } catch(error) {
-                    console.error("Erro ao tentar iniciar o reconhecimento de voz. Pode já estar ativo.", error);
+                    console.error("Erro ao tentar iniciar o reconhecimento de voz.", error);
                     activeMicButton = null;
                 }
                 recognition.onstart = () => {
@@ -273,21 +272,29 @@ document.addEventListener('DOMContentLoaded', () => {
         
         recognition.onresult = (event) => {
             const transcript = event.results[0][0].transcript;
+            
             if (activeMicButton) {
                 const targetId = activeMicButton.dataset.target;
                 const targetInput = document.getElementById(targetId);
 
-                const numericTranscript = convertWordsToNumbers(transcript);
-                const cleanedTranscript = numericTranscript.replace(/\s/g, '');
+                // Etapa 1: Converte palavras como "dois" ou "vírgula" para "2" ou "."
+                let processedText = convertWordsToNumbers(transcript);
+
+                // Etapa 2: Substitui a vírgula (seja do browser ou da nossa conversão) por ponto.
+                processedText = processedText.replace(/,/g, '.');
+                
+                // Etapa 3: Remove todos os caracteres que NÃO SÃO dígitos ou ponto.
+                processedText = processedText.replace(/[^0-9.]/g, '');
 
                 if (targetInput.type === 'number') {
-                    const numericValue = parseFloat(cleanedTranscript);
+                    const numericValue = parseFloat(processedText);
                     if (!isNaN(numericValue)) {
                         targetInput.value = numericValue;
                     } else {
-                        console.warn(`Não foi possível converter "${transcript}" para um número.`);
+                        console.warn(`Não foi possível converter "${transcript}" para um número após o processamento.`);
                     }
                 } else {
+                    // Para a textarea, usamos o texto original sem processamento numérico
                     const textoAtual = targetInput.value;
                     targetInput.value = textoAtual ? `${textoAtual} ${transcript}` : transcript;
                 }
